@@ -95,13 +95,19 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Files.cs" />
     <Compile Include="HOGPixels.cs" />
+    <Compile Include="Image.cs" />
     <Compile Include="ImageIO.cs" />
+    <Compile Include="ImageOperations.cs" />
     <Compile Include="ImageProcess.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pixel.cs" />
+    <Compile Include="PixelOperations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SortedPixelList.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">

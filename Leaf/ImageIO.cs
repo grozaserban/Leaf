@@ -19,9 +19,15 @@ namespace Leaf
 
             return await _fileSavePicker.PickSaveFileAsync();
             // replace last row with this to hide the prompt
-            /*
-               StorageFile _outputFile = await Windows.Storage.KnownFolders.PicturesLibrary.CreateFileAsync("file1.mp3",Windows.Storage.CreationCollisionOption.ReplaceExisting);
-            */
+
+         //   return await KnownFolders.PicturesLibrary.CreateFileAsync("Hough.bmp", CreationCollisionOption.GenerateUniqueName);
+
+        }
+
+        public static async void WriteToFile(IStorageFolder folder, string fileName, SoftwareBitmap bitmap)
+        {
+            var file = await folder.CreateFileAsync(fileName + ".bmp", CreationCollisionOption.GenerateUniqueName);
+            await ImageIO.SaveSoftwareBitmapToFile(bitmap, file);
         }
 
         public static async Task<bool> SaveSoftwareBitmapToFile(SoftwareBitmap softwareBitmap)
@@ -42,10 +48,13 @@ namespace Leaf
                 encoder.SetSoftwareBitmap(softwareBitmap);
 
                 // Set additional encoding parameters, if needed
-                encoder.BitmapTransform.ScaledWidth = 480;
-                encoder.BitmapTransform.ScaledHeight = 480;
-                encoder.BitmapTransform.Rotation = BitmapRotation.None;//BitmapRotation.Clockwise90Degrees;
-                encoder.BitmapTransform.InterpolationMode = BitmapInterpolationMode.Fant;
+                if (softwareBitmap.PixelHeight > 480 && softwareBitmap.PixelWidth > 480)
+                {
+                    encoder.BitmapTransform.ScaledWidth = 480;
+                    encoder.BitmapTransform.ScaledHeight = 480;
+                    encoder.BitmapTransform.Rotation = BitmapRotation.None;//BitmapRotation.Clockwise90Degrees;
+                    encoder.BitmapTransform.InterpolationMode = BitmapInterpolationMode.Linear;
+                }
                 encoder.IsThumbnailGenerated = false;
                 try
                 {
