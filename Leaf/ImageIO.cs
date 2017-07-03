@@ -18,9 +18,11 @@ namespace Leaf
             _fileSavePicker.SuggestedFileName = "savedLeaf";
 
             return await _fileSavePicker.PickSaveFileAsync();
-            // replace last row with this to hide the prompt
-
-         //   return await KnownFolders.PicturesLibrary.CreateFileAsync("Hough.bmp", CreationCollisionOption.GenerateUniqueName);
+        }
+        private static async Task<StorageFile> SetAutomaticOutputStorageFile()
+        {
+          
+            return await KnownFolders.PicturesLibrary.CreateFileAsync("leaf.bmp", CreationCollisionOption.GenerateUniqueName);
 
         }
 
@@ -28,6 +30,13 @@ namespace Leaf
         {
             var file = await folder.CreateFileAsync(fileName + ".bmp", CreationCollisionOption.GenerateUniqueName);
             await ImageIO.SaveSoftwareBitmapToFile(bitmap, file);
+        }
+
+        public static async Task<bool> SaveSoftwareBitmapToFile(SoftwareBitmap softwareBitmap, bool automatic = false)
+        {
+            if (!automatic)
+                return SaveSoftwareBitmapToFile(softwareBitmap).Result;
+            return await SaveSoftwareBitmapToFile(softwareBitmap, await SetAutomaticOutputStorageFile());
         }
 
         public static async Task<bool> SaveSoftwareBitmapToFile(SoftwareBitmap softwareBitmap)
