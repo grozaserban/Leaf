@@ -161,7 +161,7 @@ namespace Leaf
             {
                 if (image.getPixel(x, heightMidle).g > 10)
                 {
-                    for (uint y = 0; y < image.Editor.width; y++)
+                    for (uint y = 0; y < image.Editor.height; y++)
                     {
                         image.setPixel(x, y, 0);
                         image.setPixel(x + 1, y, 0);
@@ -177,7 +177,7 @@ namespace Leaf
             {
                 if (image.getPixel(x, heightMidle).g > 10)
                 {
-                    for (uint y = 0; y < image.Editor.width; y++)
+                    for (uint y = 0; y < image.Editor.height; y++)
                     {
                         image.setPixel(x, y, 0);
                         image.setPixel(x - 1, y, 0);
