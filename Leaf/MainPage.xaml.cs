@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
@@ -46,7 +47,8 @@ namespace Leaf
             await captureManager.InitializeAsync();   //Initialize MediaCapture and
             capturePreview.Source = captureManager;
             //Start previewing on CaptureElement
-            await captureManager.StartPreviewAsync();  //Start camera capturing
+            captureManager.SetPreviewRotation(VideoRotation.Clockwise90Degrees);
+           await captureManager.StartPreviewAsync();  //Start camera capturing
 
             // TODO: If your application contains multiple pages, ensure that you are
             // handling the hardware Back button by registering for the
@@ -142,9 +144,11 @@ namespace Leaf
 
         private async void LoadImages(object sender, RoutedEventArgs e)
         {
-            WriteHOGAverageToFiles(sender, e);
-            //WriteHOGToFiles(sender, e);
-            //CreateSubfoldersAndHough(sender, e);
+            Task.Run(() => CreateSubfoldersAndHough(sender, e));
+        
+            //  Task.Run(() =>WriteHOGToFiles(sender, e));
+      
+            //WriteHOGAverageToFiles(sender, e);
         }
 
         private async void WriteHOGAverageToFiles(object sender, RoutedEventArgs e)
@@ -181,12 +185,12 @@ namespace Leaf
                 }
                 leafTypeMaxPoints += Environment.NewLine;
             }
-            WriteToFile(leafTypeMaxPoints, appFolder, "HistogramsDouble.txt");
+            WriteToFile(leafTypeMaxPoints, appFolder, "HistogramsAveragesDouble.txt");
         }
 
         private async void WriteHOGToFiles(object sender, RoutedEventArgs e)
         {
-            var appFolder = await KnownFolders.PicturesLibrary.GetFolderAsync("LeafHogs");
+            var appFolder = await KnownFolders.PicturesLibrary.GetFolderAsync("20+");
             string leafTypeMaxPoints = Folders.Names.Length + Environment.NewLine;
             foreach (var folderName in Folders.Names)
             {
@@ -218,7 +222,7 @@ namespace Leaf
         private async void CreateSubfoldersAndHough(object sender, RoutedEventArgs e)
         {
             string leafTypeMaxPoints = string.Empty;
-            var appFolder = await KnownFolders.PicturesLibrary.GetFolderAsync("LeafsVeins");
+            var appFolder = await KnownFolders.PicturesLibrary.GetFolderAsync("20+");
             foreach (var folderName in Folders.Names)
             {
                 var leafTypeFolder = await appFolder.GetFolderAsync(folderName);
@@ -226,8 +230,6 @@ namespace Leaf
                 var gray = await leafTypeFolder.CreateFolderAsync("Grayscale");
                 var filtered = await leafTypeFolder.CreateFolderAsync("GaussianFilter");
                 var Gradient = await leafTypeFolder.CreateFolderAsync("Gradient");
-                var AfterGradientProc = await leafTypeFolder.CreateFolderAsync("AfterGradientProc");
-                var HoughGradient = await leafTypeFolder.CreateFolderAsync("HoughGradient");
                 var HOG = await leafTypeFolder.CreateFolderAsync("HOG");
 
                 foreach (var storageFile in leafStorageFiles)
@@ -242,26 +244,10 @@ namespace Leaf
                     image.ComputeGradient();
                     ImageIO.WriteToFile(Gradient, "leaf", image.SoftwareBitmap);
 
-                    //image.HistogramOfOrientedGradients();
-                    //WriteToFile(HOG, "leaf", image.SoftwareBitmap);
-
-                    image.DeleteSquare()
-                         .Normalize()
-                         .ToBlackAndWhite(7)
-                         .Salt()
-                         .Expand()
-                         .Contraction();
-                    ImageIO.WriteToFile(AfterGradientProc, "leaf", image.SoftwareBitmap);
-
-                    image = image.HoughGradient(1, 1);
-                    ImageIO.WriteToFile(HoughGradient, "leaf", image.SoftwareBitmap);
-
-                    leafTypeMaxPoints += folderName.ToString() + " " + image.ComputeMaxPoints(7, 15).ToString(image.Editor.width, image.Editor.height) + Environment.NewLine;
-
-                    image.DrawMaxPoints(13, 15);
+                    image.DrawHistogramOfOrientedGradients(60, 9);
+                    ImageIO.WriteToFile(HOG, "leaf", image.SoftwareBitmap);
                 }
             }
-            WriteToFile(leafTypeMaxPoints, appFolder, "maxPoints.txt");
         }
 
         private async void WriteToFile(string leafTypeMaxPoints, StorageFolder folder, string filename)
@@ -299,11 +285,19 @@ namespace Leaf
         {
             //Create JPEG image Encoding format for storing image in JPEG type
             ImageEncodingProperties imgFormat = ImageEncodingProperties.CreateBmp();
-            imgFormat.Height = 480;
-            imgFormat.Width = 480;
+
+            var rotation = captureManager.GetPreviewRotation();
+            var resolutions = captureManager.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.Photo).ToList();
+            var resolutionObj = resolutions.Last();
+            var resolution = resolutionObj as VideoEncodingProperties;
+
+            imgFormat.Height = resolution.Height;
+            imgFormat.Width = resolution.Width;
+          //  captureManager.VideoDeviceController.SetMediaStreamPropertiesAsync(MediaStreamType.Photo, imgFormat);
             try
             {
                 captureManager.VideoDeviceController.FlashControl.Enabled = false;
+                
             }
             catch
             {
@@ -315,7 +309,7 @@ namespace Leaf
             // StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("Photo.jpg", CreationCollisionOption.ReplaceExisting);
             var file = await KnownFolders.PicturesLibrary.CreateFileAsync("leaf.bmp", CreationCollisionOption.GenerateUniqueName);
             // take photo and store it on file location.
-            await captureManager.CapturePhotoToStorageFileAsync(imgFormat, file);
+                                                                                                                                     captureManager.CapturePhotoToStorageFileAsync(imgFormat, file);
         }
 
         private async void Stop_Capture_Preview_Click(object sender, RoutedEventArgs e)
@@ -325,14 +319,16 @@ namespace Leaf
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            minFocusTextBlock.Text = "Min:" + captureManager.VideoDeviceController.FocusControl.Min.ToString();
-            maxFocusTextBlock.Text = "Max:" + captureManager.VideoDeviceController.FocusControl.Max.ToString();
-            stepFocusTextBlock.Text = "Step:" + captureManager.VideoDeviceController.FocusControl.Step.ToString();
-            focusTextBlock.Text = "Current:" + captureManager.VideoDeviceController.FocusControl.Value.ToString();
-            TextBlock02.Text = "State:" + captureManager.VideoDeviceController.FocusControl.FocusState.ToString();
-            TextBlock12.Text = "Mode:" + captureManager.VideoDeviceController.FocusControl.Mode.ToString();
-            TextBlock22.Text = "Supported:" + captureManager.VideoDeviceController.FocusControl.Supported.ToString();
-            TextBlock32.Text = "Wait:" + captureManager.VideoDeviceController.FocusControl.WaitForFocusSupported.ToString();
+            captureManager.VideoDeviceController.Focus.TrySetAuto(true);
+            captureManager.VideoDeviceController.FocusControl.FocusAsync();
+            //minFocusTextBlock.Text = "Min:" + captureManager.VideoDeviceController.FocusControl.Min.ToString();
+            //maxFocusTextBlock.Text = "Max:" + captureManager.VideoDeviceController.FocusControl.Max.ToString();
+            //stepFocusTextBlock.Text = "Step:" + captureManager.VideoDeviceController.FocusControl.Step.ToString();
+            //focusTextBlock.Text = "Current:" + captureManager.VideoDeviceController.FocusControl.Value.ToString();
+            //TextBlock02.Text = "State:" + captureManager.VideoDeviceController.FocusControl.FocusState.ToString();
+            //TextBlock12.Text = "Mode:" + captureManager.VideoDeviceController.FocusControl.Mode.ToString();
+            //TextBlock22.Text = "Supported:" + captureManager.VideoDeviceController.FocusControl.Supported.ToString();
+            //TextBlock32.Text = "Wait:" + captureManager.VideoDeviceController.FocusControl.WaitForFocusSupported.ToString();
         }
 
         private async void CaptureAndProcessBitmap(object sender, RoutedEventArgs e)
@@ -344,12 +340,12 @@ namespace Leaf
 
             Image image = new Image(capturedPhoto.Frame.SoftwareBitmap);
 
-            image.ToGrayScale()
-                 .GaussianFilter()
-                 .ComputeGradient()
-                 .DrawHistogramOfOrientedGradients(30, 9);
+           // image.ToGrayScale()
+           //      .GaussianFilter()
+           //      .ComputeGradient()
+           //      .DrawHistogramOfOrientedGradients(30, 9);
 
-           // await ImageIO.SaveSoftwareBitmapToFile(image.SoftwareBitmap);
+            await ImageIO.SaveSoftwareBitmapToFile(image.SoftwareBitmap, true);
 
             var source = new SoftwareBitmapSource();
             SetSoftwareBitmapSource(image.SoftwareBitmap, source);
