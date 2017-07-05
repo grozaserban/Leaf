@@ -47,8 +47,9 @@ namespace Leaf
             await captureManager.InitializeAsync();   //Initialize MediaCapture and
             capturePreview.Source = captureManager;
             //Start previewing on CaptureElement
-            captureManager.SetPreviewRotation(VideoRotation.Clockwise90Degrees);
-           await captureManager.StartPreviewAsync();  //Start camera capturing
+            if (IsMobile)
+                captureManager.SetPreviewRotation(VideoRotation.Clockwise90Degrees);
+            await captureManager.StartPreviewAsync();  //Start camera capturing
 
             // TODO: If your application contains multiple pages, ensure that you are
             // handling the hardware Back button by registering for the
@@ -57,10 +58,18 @@ namespace Leaf
             // this event is handled for you.
         }
 
+        public static bool IsMobile
+        {
+            get
+            {
+                var qualifiers = Windows.ApplicationModel.Resources.Core.ResourceContext.GetForCurrentView().QualifierValues;
+                return (qualifiers.ContainsKey("DeviceFamily") && qualifiers["DeviceFamily"] == "Mobile");
+            }
+        }
+
         private async void Open_Photo(object sender, RoutedEventArgs e)
         {
             Image image = new Image(await ImageIO.LoadSoftwareBitmapFromFile());
-
             var source = new SoftwareBitmapSource();
             var timeSpan = TimeSpan.FromMilliseconds(1000);
 
@@ -88,48 +97,6 @@ namespace Leaf
             SetSoftwareBitmapSource(image.SoftwareBitmap, source);
             await Task.Delay(timeSpan);
 
-            //image.ComputeGradient();
-            //SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            //await Task.Delay(timeSpan);
-
-            //image.DeleteSquare();
-            //SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            //await Task.Delay(timeSpan);
-
-            //image.Normalize();
-            //SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            //await Task.Delay(timeSpan);
-
-            //image.ToBlackAndWhite(7);
-            //SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            //await Task.Delay(timeSpan);
-
-            //image.Salt();
-            //SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            //await Task.Delay(timeSpan);
-
-            //image.Expand();
-            //SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            //await Task.Delay(timeSpan);
-
-            //image.Contraction();
-            //SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            //await Task.Delay(timeSpan);
-
-            //     image = image.HoughGradient(1, 2);
-            //       SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            //     await Task.Delay(timeSpan);
-
-            //image = image.HoughFilter();
-            //SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            //await Task.Delay(timeSpan);
-
-            //       image.DrawMaxPoints(13, 15);
-            //image.toGrayScale().GaussianFilter().ComputeGradient().HistogramOfOrientedGradients();
-            //         SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-
-            //    await Task.Delay(timeSpan);
-            //            CreateHough(image);
             ImageIO.SaveSoftwareBitmapToFile(image.SoftwareBitmap);
         }
 
@@ -321,14 +288,6 @@ namespace Leaf
         {
             captureManager.VideoDeviceController.Focus.TrySetAuto(true);
             captureManager.VideoDeviceController.FocusControl.FocusAsync();
-            //minFocusTextBlock.Text = "Min:" + captureManager.VideoDeviceController.FocusControl.Min.ToString();
-            //maxFocusTextBlock.Text = "Max:" + captureManager.VideoDeviceController.FocusControl.Max.ToString();
-            //stepFocusTextBlock.Text = "Step:" + captureManager.VideoDeviceController.FocusControl.Step.ToString();
-            //focusTextBlock.Text = "Current:" + captureManager.VideoDeviceController.FocusControl.Value.ToString();
-            //TextBlock02.Text = "State:" + captureManager.VideoDeviceController.FocusControl.FocusState.ToString();
-            //TextBlock12.Text = "Mode:" + captureManager.VideoDeviceController.FocusControl.Mode.ToString();
-            //TextBlock22.Text = "Supported:" + captureManager.VideoDeviceController.FocusControl.Supported.ToString();
-            //TextBlock32.Text = "Wait:" + captureManager.VideoDeviceController.FocusControl.WaitForFocusSupported.ToString();
         }
 
         private async void CaptureAndProcessBitmap(object sender, RoutedEventArgs e)

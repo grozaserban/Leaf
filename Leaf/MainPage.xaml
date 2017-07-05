@@ -63,36 +63,17 @@
                VerticalAlignment="Stretch"
                RenderTransformOrigin="0.5,0.5"
                Stretch="Uniform">
-            <!--<Image.RenderTransform>
-                    <RotateTransform Angle="90" />
-                </Image.RenderTransform>-->
         </Image>
 
         <Button Grid.Row="1"
                 Grid.Column="0"
                 Click="Button_Click"
                 Content="Update focus" />
-        <!--<TextBlock x:Name="focusTextBlock"
-                   Grid.Row="0"
-                   Grid.Column="1"
-                   Text="No focus" />
-        <TextBlock x:Name="TextBlock02"
-                   Grid.Row="0"
-                   Grid.Column="2"
-                   Text="No focus" />-->
 
         <Button Grid.Row="1"
                 Grid.Column="1"
                 Click="MatchImage"
                 Content="Match Capture" />
-        <!--<TextBlock x:Name="stepFocusTextBlock"
-                   Grid.Row="3"
-                   Grid.Column="1"
-                   Text="No focus" />
-        <TextBlock x:Name="TextBlock32"
-                   Grid.Row="3"
-                   Grid.Column="2"
-                   Text="No focus" />-->
 
         <Button Grid.Row="1"
                 Grid.RowSpan="2"
@@ -100,27 +81,11 @@
                 Grid.ColumnSpan="2"
                 Click="Capture_Photo_Click"
                 Content="Capture Photo" />
-        <!--<TextBlock x:Name="minFocusTextBlock"
-                   Grid.Row="1"
-                   Grid.Column="1"
-                   Text="No focus" />
-        <TextBlock x:Name="TextBlock12"
-                   Grid.Row="1"
-                   Grid.Column="2"
-                   Text="No focus" />-->
 
         <Button Grid.Row="2"
                 Grid.Column="0"
                 Click="Open_Photo"
                 Content="Open Photo" />
-        <!--<TextBlock x:Name="maxFocusTextBlock"
-                   Grid.Row="2"
-                   Grid.Column="1"
-                   Text="No focus" />
-        <TextBlock x:Name="TextBlock22"
-                   Grid.Row="2"
-                   Grid.Column="2"
-                   Text="No focus" />-->
 
         <Button Grid.Row="2"
                 Grid.Column="1"

@@ -8,7 +8,7 @@ using Windows.Storage.Streams;
 
 namespace Leaf
 {
-    static class ImageIO
+    public static class ImageIO
     {
         private static async Task<StorageFile> SetOutputStorageFile()
         {
@@ -19,11 +19,10 @@ namespace Leaf
 
             return await _fileSavePicker.PickSaveFileAsync();
         }
+
         private static async Task<StorageFile> SetAutomaticOutputStorageFile()
         {
-          
             return await KnownFolders.PicturesLibrary.CreateFileAsync("leaf.bmp", CreationCollisionOption.GenerateUniqueName);
-
         }
 
         public static async void WriteToFile(IStorageFolder folder, string fileName, SoftwareBitmap bitmap)
@@ -36,6 +35,7 @@ namespace Leaf
         {
             if (!automatic)
                 return SaveSoftwareBitmapToFile(softwareBitmap).Result;
+
             return await SaveSoftwareBitmapToFile(softwareBitmap, await SetAutomaticOutputStorageFile());
         }
 
@@ -84,7 +84,7 @@ namespace Leaf
                     }
                 }
                 // put new softwarebitmap to release the lock from the other one
-                encoder.SetSoftwareBitmap(new SoftwareBitmap(BitmapPixelFormat.Bgra8, 10, 10,BitmapAlphaMode.Premultiplied));
+                encoder.SetSoftwareBitmap(new SoftwareBitmap(BitmapPixelFormat.Bgra8, 10, 10, BitmapAlphaMode.Premultiplied));
             }
             return true;
         }
