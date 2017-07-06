@@ -1,6 +1,4 @@
 ﻿using SimpleImageEditing;
-using System;
-using System.Diagnostics.Contracts;
 using Windows.Graphics.Imaging;
 
 namespace Leaf
@@ -16,12 +14,6 @@ namespace Leaf
         {
             _softwareBitmap = null;
             Editor = null;
-        }
-
-        public ImageProcess(SoftwareBitmap softwareBitmap)
-        {
-            _softwareBitmap = softwareBitmap;
-            Editor = new SoftwareBitmapEditor(_softwareBitmap);
         }
 
         public SoftwareBitmap GetSoftwareBitmap()
@@ -49,19 +41,4 @@ namespace Leaf
             return Editor.getPixel(x, y);
         }
     }
-
-
-    /* var lowLagCapture = await captureManager.PrepareLowLagPhotoCaptureAsync(
-                                                 ImageEncodingProperties.CreateUncompressed(MediaPixelFormat.Bgra8));
- var capturedPhoto = await lowLagCapture.CaptureAsync();
- var softwareBitmap = capturedPhoto.Frame.SoftwareBitmap;
- ImageProcess capture = new ImageProcess(softwareBitmap);
- */
-
-    /*
-var source = new SoftwareBitmapSource();
-SetSoftwareBitmapSource(capture.GetSoftwareBitmap(), source);
-editPreview.Source = source;
-await Task.Delay(TimeSpan.FromSeconds(3));
-capture.Check();*/
 }
