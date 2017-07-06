@@ -43,7 +43,6 @@ namespace Leaf
             }
             _pixels = _pixels.OrderByDescending(p => p.Value).ToList();
             _minValue = _pixels[_pixels.Count - 1].Value;
-            //  }
         }
 
         private bool WeakNeighbour(Pixel ex, Pixel pixel)
