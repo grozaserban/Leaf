@@ -100,7 +100,6 @@
     <Compile Include="Image.cs" />
     <Compile Include="ImageIO.cs" />
     <Compile Include="ImageOperations.cs" />
-    <Compile Include="ImageProcess.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
