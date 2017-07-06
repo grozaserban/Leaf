@@ -5,9 +5,9 @@ using System.Linq;
 
 namespace Leaf
 {
-    public class SortedPixelList : IEnumerable<Pixel>
+    public class SortedPixelList : IEnumerable<GrayscalePixel>
     {
-        private List<Pixel> _pixels;
+        private List<GrayscalePixel> _pixels;
 
         private int _capacity;
         private int _range;
@@ -18,16 +18,16 @@ namespace Leaf
             _capacity = capacity;
             _minValue = 0;
             _range = range;
-            _pixels = new List<Pixel>(capacity);
+            _pixels = new List<GrayscalePixel>(capacity);
         }
 
         public void Add(uint x, uint y, byte value)
         {
             if ((value > _minValue) || (_pixels.Count < _capacity))
-                Add(new Pixel(x, y, value));
+                Add(new GrayscalePixel(x, y, value));
         }
 
-        public void Add(Pixel pixel)
+        public void Add(GrayscalePixel pixel)
         {
             _pixels.RemoveAll(ex => WeakNeighbour(ex, pixel));
 
@@ -45,17 +45,17 @@ namespace Leaf
             _minValue = _pixels[_pixels.Count - 1].Value;
         }
 
-        private bool WeakNeighbour(Pixel ex, Pixel pixel)
+        private bool WeakNeighbour(GrayscalePixel ex, GrayscalePixel pixel)
         {
             return Neighour(ex, pixel) && ex.Value < pixel.Value;
         }
 
-        private bool StrongNeighbour(Pixel ex, Pixel pixel)
+        private bool StrongNeighbour(GrayscalePixel ex, GrayscalePixel pixel)
         {
             return Neighour(ex, pixel) && ex.Value >= pixel.Value;
         }
 
-        private bool Neighour(Pixel a, Pixel b)
+        private bool Neighour(GrayscalePixel a, GrayscalePixel b)
         {
             var distX = Math.Abs((int)a.X - b.X);
             var distY = Math.Abs((int)a.Y - b.Y);
@@ -63,7 +63,7 @@ namespace Leaf
             return distX < _range && distY < _range;
         }
 
-        public Pixel Get(int index)
+        public GrayscalePixel Get(int index)
         {
             return _pixels[index];
         }
@@ -80,14 +80,14 @@ namespace Leaf
             return returnValue;
         }
 
-        public IEnumerator<Pixel> GetEnumerator()
+        public IEnumerator<GrayscalePixel> GetEnumerator()
         {
-            return ((IEnumerable<Pixel>)_pixels).GetEnumerator();
+            return ((IEnumerable<GrayscalePixel>)_pixels).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable<Pixel>)_pixels).GetEnumerator();
+            return ((IEnumerable<GrayscalePixel>)_pixels).GetEnumerator();
         }
     }
 }

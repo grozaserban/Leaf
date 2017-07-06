@@ -63,7 +63,7 @@ namespace Leaf
             // If you are using the NavigationHelper provided by some templates,
             // this event is handled for you.
         }
-
+        
         public static bool IsMobile
         {
             get
@@ -76,34 +76,39 @@ namespace Leaf
         private async void Open_Photo(object sender, RoutedEventArgs e)
         {
             Image image = new Image(await ImageIO.LoadSoftwareBitmapFromFile());
-            var source = new SoftwareBitmapSource();
-            var timeSpan = TimeSpan.FromMilliseconds(1000);
+            var bitmapSource = new SoftwareBitmapSource();
+            editPreview.Source = bitmapSource;
+            //Task.Run(() => ProcessPhotoWithDelay(image, bitmapSource));
+            ProcessPhotoWithDelay(image, bitmapSource);
+        }
 
-            SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            editPreview.Source = source;
+        private async void ProcessPhotoWithDelay(Image image, SoftwareBitmapSource source)
+        {
+            var timeSpan = TimeSpan.FromMilliseconds(1000);
+            await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
             await Task.Delay(timeSpan);
 
             image.ToGrayScale();
-            SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            await Task.Delay(timeSpan);
+            await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
+      //      await Task.Delay(timeSpan);
 
             image.GaussianFilter();
-            SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            await Task.Delay(timeSpan);
+            await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
+     //       await Task.Delay(timeSpan);
 
             image.ComputeGradient();
-            SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            await Task.Delay(timeSpan);
+            await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
+//await Task.Delay(timeSpan);
 
             image.DeleteSquare();
-            SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            await Task.Delay(timeSpan);
+            await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
+   //         await Task.Delay(timeSpan);
 
-            image.HistogramOfOrientedGradients(60, 14);
-            SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            await Task.Delay(timeSpan);
+            var hist = image.HistogramOfOrientedGradients(60, 14);
+            await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
+            //await Task.Delay(timeSpan);
 
-            ImageIO.SaveSoftwareBitmapToFile(image.SoftwareBitmap);
+            await ImageIO.SaveSoftwareBitmapToFile(image.SoftwareBitmap);
         }
 
         private async void Classify(Image image)
@@ -368,7 +373,7 @@ namespace Leaf
 
         }
 
-        private async void SetSoftwareBitmapSource(SoftwareBitmap bitmap, SoftwareBitmapSource source)
+        private async Task<bool> SetSoftwareBitmapSource(SoftwareBitmap bitmap, SoftwareBitmapSource source)
         {
             if (bitmap.BitmapPixelFormat != BitmapPixelFormat.Bgra8 || bitmap.BitmapAlphaMode == BitmapAlphaMode.Straight)
             {
@@ -376,6 +381,7 @@ namespace Leaf
             }
 
             await source.SetBitmapAsync(bitmap);
+            return true;
         }
 
         private async void ComputeScores(System.Collections.Generic.IReadOnlyList<StorageFile> storageFiles, Image image)
@@ -399,7 +405,7 @@ namespace Leaf
             Parallel.ForEach(storageFiles, async storageFile => {
 
                 var imageFromStorage = new Image(await ImageIO.LoadSoftwareBitmapFromFile(storageFile));
-                long score = image.MatchExactely(imageFromStorage);
+                long score = 2;// image.MatchExactely(imageFromStorage);
                 score -= 210 * 480; // because 210 lines are red and they will match
                 long percent = score / (48 * 48) * 480 / 270; // because only 270 lines are usefull
                 Debug.WriteLine(" Score: " + score + " Percent: " + percent);

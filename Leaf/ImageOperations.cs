@@ -1,5 +1,4 @@
-﻿using SimpleImageEditing;
-using System;
+﻿using System;
 using System.Diagnostics.Contracts;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
@@ -10,11 +9,12 @@ namespace Leaf
     {
         public static Image ToGrayScale(this Image image)
         {
-            for (uint y = 0; y < image.Editor.height; y++)
+            var editor = image.Editor;
+            for (uint y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.Editor.width; x++)
+                for (uint x = 0; x < image.PixelWidth; x++)
                 {
-                    PixelOperations.SetPixelToGrayScale(image.Editor, x, y);
+                    PixelOperations.SetPixelToGrayScale(editor, x, y);
                 }
             }
             return image;
@@ -24,11 +24,11 @@ namespace Leaf
         {
             var treshold = image.Histogram().TresholdForPercent(tresholdPercent);
 
-            for (uint y = 0; y < image.Editor.height; y++)
+            for (uint y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.Editor.width; x++)
+                for (uint x = 0; x < image.PixelWidth; x++)
                 {
-                    if (image.getPixel(x, y).g > treshold)
+                    if (image.getPixel(x, y).Value > treshold)
                     {
                         image.setPixel(x, y, 255);
                     }
@@ -45,15 +45,15 @@ namespace Leaf
         {
             uint[] histogram = new uint[257];
 
-            for (uint y = 0; y < image.Editor.height; y++)
+            for (uint y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.Editor.width; x++)
+                for (uint x = 0; x < image.PixelWidth; x++)
                 {
-                    histogram[image.getPixel(x, y).g]++;
+                    histogram[image.getPixel(x, y).Value]++;
                 }
             }
 
-            histogram[256] = (uint)(image.Editor.height * image.Editor.width);
+            histogram[256] = (uint)(image.PixelHeight * image.PixelWidth);
 
             return histogram;
         }
@@ -78,11 +78,11 @@ namespace Leaf
         {
             var pixels = new SortedPixelList(count, range);
 
-            for (uint y = 0; y < image.Editor.height; y++)
+            for (uint y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.Editor.width; x++)
+                for (uint x = 0; x < image.PixelWidth; x++)
                 {
-                    pixels.Add(x, y, image.getPixel(x, y).g);
+                    pixels.Add(x, y, image.getPixel(x, y).Value);
                 }
             }
             return pixels;
@@ -92,7 +92,7 @@ namespace Leaf
         {
             foreach (var pixel in image.ComputeMaxPoints(count, range))
             {
-                image.Editor.setPixel(pixel.X, pixel.Y, 255, 0, 0);
+                image.setPixel(pixel.X, pixel.Y, 255, 0, 0);
             }
 
             return image;
@@ -101,21 +101,21 @@ namespace Leaf
         public static Image Normalize(this Image image)
         {
             var max = 0;
-            for (uint y = 0; y < image.Editor.height; y++)
+            for (uint y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.Editor.width; x++)
+                for (uint x = 0; x < image.PixelWidth; x++)
                 {
-                    if (image.getPixel(x, y).g > max)
-                        max = image.getPixel(x, y).g;
+                    if (image.getPixel(x, y).Value > max)
+                        max = image.getPixel(x, y).Value;
                 }
             }
             var normalizationFactor = (double)255 / max;
 
-            for (uint y = 0; y < image.Editor.height; y++)
+            for (uint y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.Editor.width; x++)
+                for (uint x = 0; x < image.PixelWidth; x++)
                 {
-                    image.setPixel(x, y, (byte)(image.getPixel(x, y).g * normalizationFactor));
+                    image.setPixel(x, y, (byte)(image.getPixel(x, y).Value * normalizationFactor));
                 }
             }
             return image;
@@ -123,13 +123,13 @@ namespace Leaf
 
         public static Image DeleteSquare(this Image image)
         {
-            uint heightMidle = (uint)image.Editor.height / 2;
-            uint widthMidle = (uint)image.Editor.width / 2;
-            for (uint y = 0; y < image.Editor.height; y++)
+            uint heightMidle = (uint)image.PixelHeight / 2;
+            uint widthMidle = (uint)image.PixelWidth / 2;
+            for (uint y = 0; y < image.PixelHeight; y++)
             {
-                if (image.getPixel(widthMidle, y).g > 10)
+                if (image.getPixel(widthMidle, y).Value > 10)
                 {
-                    for (uint x = 0; x < image.Editor.width; x++)
+                    for (uint x = 0; x < image.PixelWidth; x++)
                     {
                         image.setPixel(x, y, 0);
                         image.setPixel(x, y + 1, 0);
@@ -141,11 +141,11 @@ namespace Leaf
                 }
             }
 
-            for (uint y = (uint)image.Editor.height - 1; y >= 0; y--)
+            for (uint y = (uint)image.PixelHeight - 1; y > 0; y--)
             {
-                if (image.getPixel(widthMidle, y).g > 10)
+                if (image.getPixel(widthMidle, y).Value > 10)
                 {
-                    for (uint x = 0; x < image.Editor.width; x++)
+                    for (uint x = 0; x < image.PixelWidth; x++)
                     {
                         image.setPixel(x, y, 0);
                         image.setPixel(x, y - 1, 0);
@@ -157,11 +157,11 @@ namespace Leaf
                 }
             }
 
-            for (uint x = 0; x < image.Editor.width; x++)
+            for (uint x = 0; x < image.PixelWidth; x++)
             {
-                if (image.getPixel(x, heightMidle).g > 10)
+                if (image.getPixel(x, heightMidle).Value > 10)
                 {
-                    for (uint y = 0; y < image.Editor.height; y++)
+                    for (uint y = 0; y < image.PixelHeight; y++)
                     {
                         image.setPixel(x, y, 0);
                         image.setPixel(x + 1, y, 0);
@@ -173,11 +173,11 @@ namespace Leaf
                 }
             }
 
-            for (uint x = (uint)image.Editor.width - 1; x >= 0; x--)
+            for (uint x = (uint)image.PixelWidth - 1; x > 0; x--)
             {
-                if (image.getPixel(x, heightMidle).g > 10)
+                if (image.getPixel(x, heightMidle).Value > 10)
                 {
-                    for (uint y = 0; y < image.Editor.height; y++)
+                    for (uint y = 0; y < image.PixelHeight; y++)
                     {
                         image.setPixel(x, y, 0);
                         image.setPixel(x - 1, y, 0);
@@ -195,7 +195,7 @@ namespace Leaf
         public static Image GaussianFilter(this Image image)
         {
             var initialImage = new Image(image);
-            SoftwareBitmapPixel pixel;
+            GrayscalePixel pixel;
 
             double sigma = 0.8;
             int n = (int)(6 * sigma);
@@ -221,9 +221,9 @@ namespace Leaf
                     gausSum = gausSum + gaus[i, j];
                 }
 
-            for (uint y = 2; y < image.Editor.height - 2; y++)
+            for (uint y = 2; y < image.PixelHeight - 2; y++)
             {
-                for (uint x = 2; x < image.Editor.width - 2; x++)
+                for (uint x = 2; x < image.PixelWidth - 2; x++)
                 {
                     aux = 0;
                     for (int yvar = -2; yvar < 3; yvar++)
@@ -231,7 +231,7 @@ namespace Leaf
                         for (int xvar = -2; xvar < 3; xvar++)
                         {
                             pixel = initialImage.getPixel((uint)(x + xvar), (uint)(y + yvar));
-                            aux = aux + pixel.r * gaus[xvar + 2, yvar + 2];
+                            aux = aux + pixel.Value * gaus[xvar + 2, yvar + 2];
                         }
                     }
                     aux = aux / gausSum;
@@ -245,7 +245,7 @@ namespace Leaf
         {
             // wrong filter
             var initialImage = new Image(image);
-            SoftwareBitmapPixel pixel;
+            GrayscalePixel pixel;
 
             double sigma = 0.8;
             int n = (int)(6 * sigma);
@@ -272,9 +272,9 @@ namespace Leaf
                     gausSum += gaus[xvar, yvar];
                 }
             }
-            for (uint y = 2; y < image.Editor.height - 2; y++)
+            for (uint y = 2; y < image.PixelHeight - 2; y++)
             {
-                for (uint x = 2; x < image.Editor.width - 2; x++)
+                for (uint x = 2; x < image.PixelWidth - 2; x++)
                 {
                     aux = 0;
                     for (int yvar = -2; yvar < 3; yvar++)
@@ -282,7 +282,7 @@ namespace Leaf
                         for (int xvar = -2; xvar < 3; xvar++)
                         {
                             pixel = initialImage.getPixel((uint)(x + xvar), (uint)(y + yvar));
-                            aux = aux + pixel.g * gaus[xvar + 2, yvar + 2];
+                            aux = aux + pixel.Value * gaus[xvar + 2, yvar + 2];
                         }
                     }
                     aux = aux / gausSum;
@@ -296,20 +296,20 @@ namespace Leaf
         {
             var initialImage = new Image(image);
 
-            for (uint y = 1; y < image.Editor.height - 1; y++)
+            for (uint y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.Editor.width - 1; x++)
+                for (uint x = 1; x < image.PixelWidth - 1; x++)
                 {
                     var neighbors =
-                        initialImage.getPixel(x - 1, y - 1).g +
-                        initialImage.getPixel(x - 1, y).g +
-                        initialImage.getPixel(x - 1, y + 1).g +
-                        initialImage.getPixel(x, y - 1).g +
-                        initialImage.getPixel(x, y).g +
-                        initialImage.getPixel(x, y + 1).g +
-                        initialImage.getPixel(x + 1, y - 1).g +
-                        initialImage.getPixel(x + 1, y).g +
-                        initialImage.getPixel(x + 1, y + 1).g;
+                        initialImage.getPixel(x - 1, y - 1).Value +
+                        initialImage.getPixel(x - 1, y).Value +
+                        initialImage.getPixel(x - 1, y + 1).Value +
+                        initialImage.getPixel(x, y - 1).Value +
+                        initialImage.getPixel(x, y).Value +
+                        initialImage.getPixel(x, y + 1).Value +
+                        initialImage.getPixel(x + 1, y - 1).Value +
+                        initialImage.getPixel(x + 1, y).Value +
+                        initialImage.getPixel(x + 1, y + 1).Value;
                     image.setPixel(x, y, (byte)(neighbors != 0 ? 255 : 0));
                 }
             }
@@ -320,20 +320,20 @@ namespace Leaf
         {
             var initialImage = new Image(image);
 
-            for (uint y = 1; y < image.Editor.height - 1; y++)
+            for (uint y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.Editor.width - 1; x++)
+                for (uint x = 1; x < image.PixelWidth - 1; x++)
                 {
                     var neighbors =
-                        initialImage.getPixel(x - 1, y - 1).g +
-                        initialImage.getPixel(x - 1, y).g +
-                        initialImage.getPixel(x - 1, y + 1).g +
-                        initialImage.getPixel(x, y - 1).g +
-                        initialImage.getPixel(x, y).g +
-                        initialImage.getPixel(x, y + 1).g +
-                        initialImage.getPixel(x + 1, y - 1).g +
-                        initialImage.getPixel(x + 1, y).g +
-                        initialImage.getPixel(x + 1, y + 1).g;
+                        initialImage.getPixel(x - 1, y - 1).Value +
+                        initialImage.getPixel(x - 1, y).Value +
+                        initialImage.getPixel(x - 1, y + 1).Value +
+                        initialImage.getPixel(x, y - 1).Value +
+                        initialImage.getPixel(x, y).Value +
+                        initialImage.getPixel(x, y + 1).Value +
+                        initialImage.getPixel(x + 1, y - 1).Value +
+                        initialImage.getPixel(x + 1, y).Value +
+                        initialImage.getPixel(x + 1, y + 1).Value;
                     neighbors /= 255;
                     image.setPixel(x, y, (byte)(neighbors == 9 ? 255 : 0));
                 }
@@ -345,17 +345,17 @@ namespace Leaf
         {
             var initialImage = new Image(image);
 
-            for (uint y = 1; y < image.Editor.height - 1; y++)
+            for (uint y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.Editor.width - 1; x++)
+                for (uint x = 1; x < image.PixelWidth - 1; x++)
                 {
-                    if (initialImage.getPixel(x, y).g == 255)
+                    if (initialImage.getPixel(x, y).Value == 255)
                     {
                         var neighbors =
-                            initialImage.getPixel(x - 1, y).g +
-                            initialImage.getPixel(x, y - 1).g +
-                            initialImage.getPixel(x, y + 1).g +
-                            initialImage.getPixel(x + 1, y).g;
+                            initialImage.getPixel(x - 1, y).Value +
+                            initialImage.getPixel(x, y - 1).Value +
+                            initialImage.getPixel(x, y + 1).Value +
+                            initialImage.getPixel(x + 1, y).Value;
                         neighbors /= 255;
                         image.setPixel(x, y, (byte)(neighbors == 0 ? 0 : 255));
                     }
@@ -369,24 +369,24 @@ namespace Leaf
             //not working properly
             var initialImage = new Image(image);
 
-            for (uint y = 1; y < image.Editor.height - 1; y++)
+            for (uint y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.Editor.width - 1; x++)
+                for (uint x = 1; x < image.PixelWidth - 1; x++)
                 {
-                    if (initialImage.getPixel(x, y).g == 255)
+                    if (initialImage.getPixel(x, y).Value == 255)
                     {
                         var widthDifference =
-                            initialImage.getPixel(x + 1, y).g -
-                            initialImage.getPixel(x - 1, y).g;
+                            initialImage.getPixel(x + 1, y).Value -
+                            initialImage.getPixel(x - 1, y).Value;
                         var diagonalDifference =
-                            initialImage.getPixel(x + 1, y + 1).g -
-                            initialImage.getPixel(x - 1, y - 1).g;
+                            initialImage.getPixel(x + 1, y + 1).Value -
+                            initialImage.getPixel(x - 1, y - 1).Value;
                         var heightDifference =
-                            initialImage.getPixel(x, y + 1).g -
-                            initialImage.getPixel(x, y - 1).g;
+                            initialImage.getPixel(x, y + 1).Value -
+                            initialImage.getPixel(x, y - 1).Value;
                         var smallDiagonal =
-                            initialImage.getPixel(x - 1, y + 1).g -
-                            initialImage.getPixel(x + 1, y - 1).g;
+                            initialImage.getPixel(x - 1, y + 1).Value -
+                            initialImage.getPixel(x + 1, y - 1).Value;
 
                         var count = 0;
                         count = widthDifference == 255 ? count++ : count;
@@ -400,24 +400,24 @@ namespace Leaf
                 }
             }
 
-            for (uint y = 1; y < image.Editor.height - 1; y++)
+            for (uint y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.Editor.width - 1; x++)
+                for (uint x = 1; x < image.PixelWidth - 1; x++)
                 {
-                    if (initialImage.getPixel(x, y).g == 255)
+                    if (initialImage.getPixel(x, y).Value == 255)
                     {
                         var widthDifference =
-                            initialImage.getPixel(x - 1, y).g -
-                            initialImage.getPixel(x + 1, y).g;
+                            initialImage.getPixel(x - 1, y).Value -
+                            initialImage.getPixel(x + 1, y).Value;
                         var diagonalDifference =
-                            initialImage.getPixel(x - 1, y - 1).g -
-                            initialImage.getPixel(x + 1, y + 1).g;
+                            initialImage.getPixel(x - 1, y - 1).Value -
+                            initialImage.getPixel(x + 1, y + 1).Value;
                         var heightDifference =
-                            initialImage.getPixel(x, y - 1).g -
-                            initialImage.getPixel(x, y + 1).g;
+                            initialImage.getPixel(x, y - 1).Value -
+                            initialImage.getPixel(x, y + 1).Value;
                         var smallDiagonal =
-                            initialImage.getPixel(x + 1, y - 1).g -
-                            initialImage.getPixel(x - 1, y + 1).g;
+                            initialImage.getPixel(x + 1, y - 1).Value -
+                            initialImage.getPixel(x - 1, y + 1).Value;
 
                         var count = 0;
                         count = widthDifference == 255 ? count++ : count;
@@ -437,25 +437,25 @@ namespace Leaf
         {
             var initialImage = new Image(image);
 
-            byte[,] magn = new byte[image.Editor.width, image.Editor.height];
-            int[,] gradient = new int[image.Editor.width, image.Editor.height];
+            byte[,] magn = new byte[image.PixelWidth, image.PixelHeight];
+            int[,] gradient = new int[image.PixelWidth, image.PixelHeight];
             int magnX;
             int magnY;
             double max = 0;
 
-            for (int i = 0; i < image.Editor.height; i++)
-                for (int j = 0; j < image.Editor.width; j++)
+            for (int i = 0; i < image.PixelHeight; i++)
+                for (int j = 0; j < image.PixelWidth; j++)
                 {
                     magn[j, i] = 0;
                     gradient[j, i] = 0;
                 }
 
-            for (uint y = 1; y < image.Editor.height - 1; y++)
+            for (uint y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.Editor.width - 1; x++)
+                for (uint x = 1; x < image.PixelWidth - 1; x++)
                 {
-                    magnX = initialImage.getPixel(x, y + 1).r - initialImage.getPixel(x, y - 1).r;
-                    magnY = initialImage.getPixel(x + 1, y).r - initialImage.getPixel(x - 1, y).r;
+                    magnX = initialImage.getPixel(x, y + 1).Value - initialImage.getPixel(x, y - 1).Value;
+                    magnY = initialImage.getPixel(x + 1, y).Value - initialImage.getPixel(x - 1, y).Value;
                     magn[x, y] = Math.Sqrt(magnX * magnX + magnY * magnY) > 255 ? (byte)255 : (byte)Math.Sqrt(magnX * magnX + magnY * magnY);
                     gradient[x, y] = (int)(Math.Atan2(magnY, magnX) * 180 / Math.PI);
                     gradient[x, y] = gradient[x, y] > 0 ? gradient[x, y] : gradient[x, y] + 360;
@@ -464,9 +464,9 @@ namespace Leaf
             }
 
             max = 255 / max;
-            for (uint y = 1; y < image.Editor.height - 1; y++)
+            for (uint y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.Editor.width - 1; x++)
+                for (uint x = 1; x < image.PixelWidth - 1; x++)
                 {
                     magn[x, y] = (byte)(magn[x, y] * max);
                     image.setPixel(x, y, magn[x, y]);
@@ -484,25 +484,25 @@ namespace Leaf
 
             int n = 0;
 
-            int maxP = (int)Math.Ceiling(Math.Sqrt(Math.Pow(image.Editor.height, 2) + Math.Pow(image.Editor.width, 2))) / deltaP;
-            Point[] P = new Point[image.Editor.height * image.Editor.width];
+            int maxP = (int)Math.Ceiling(Math.Sqrt(Math.Pow(image.PixelHeight, 2) + Math.Pow(image.PixelWidth, 2))) / deltaP;
+            Point[] P = new Point[image.PixelHeight * image.PixelWidth];
             Image hough = new Image(new SoftwareBitmap(BitmapPixelFormat.Bgra8, maxTheta, maxP * 2, BitmapAlphaMode.Premultiplied)); //*2
             int[][] houghAux = new int[maxTheta][];
             int maxPixel = 0;
 
-            for (uint x = 0; x < hough.Editor.width; x++)
+            for (uint x = 0; x < hough.PixelWidth; x++)
             {
                 houghAux[x] = new int[maxP * 2]; //*2
-                for (uint y = 0; y < hough.Editor.height; y++)
+                for (uint y = 0; y < hough.PixelHeight; y++)
                 {
                     houghAux[x][y] = 0;
                 }
             }
             //numaram punctele
-            for (uint y = 0; y < image.Editor.height; y++)
-                for (uint x = 0; x < image.Editor.width; x++)
+            for (uint y = 0; y < image.PixelHeight; y++)
+                for (uint x = 0; x < image.PixelWidth; x++)
                 {
-                    if (image.getPixel(x, y).g > 40)
+                    if (image.getPixel(x, y).Value > 40)
                     {
                         P[n] = new Point(x, y);
                         n++;
@@ -536,8 +536,8 @@ namespace Leaf
             }
             double normalizationFactor = (double)255 / maxPixel;
 
-            for (uint x = 0; x < hough.Editor.width; x++)
-                for (uint y = 0; y < hough.Editor.height; y++)
+            for (uint x = 0; x < hough.PixelWidth; x++)
+                for (uint y = 0; y < hough.PixelHeight; y++)
                 {
                     hough.setPixel(x, y, (byte)(houghAux[x][y] * normalizationFactor));
                 }
@@ -550,7 +550,7 @@ namespace Leaf
             Contract.Assert(image != null);
             Contract.Assert(image.Gradient != null, "gradient is not computed");
 
-            SoftwareBitmapPixel[] colorPixel = HOGPixels.getHogPixels();
+            ColorPixel[] colorPixel = HOGPixels.getHogPixels();
 
             var histogramSizeX = blockCount;
             var histogramSizeY = blockCount;
@@ -560,8 +560,8 @@ namespace Leaf
             int angle;
             uint sizex, sizey, binx, biny;
 
-            sizex = (uint)(image.Editor.width / histogramSizeX + 1);
-            sizey = (uint)(image.Editor.height / histogramSizeY + 1);
+            sizex = (uint)(image.PixelWidth / histogramSizeX + 1);
+            sizey = (uint)(image.PixelHeight / histogramSizeY + 1);
 
             for (int i = 0; i < (uint)histogramSizeX; i++)
                 for (int j = 0; j < (uint)histogramSizeY; j++)
@@ -570,9 +570,9 @@ namespace Leaf
                         gradHist[i, j, k] = 0;
                     }
             // compute gradients for each angle
-            for (uint y = 0; y < image.Editor.height; y++)
+            for (uint y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.Editor.width; x++)
+                for (uint x = 0; x < image.PixelWidth; x++)
                 {
                     binx = x / sizex;
                     biny = y / sizey;
@@ -601,13 +601,13 @@ namespace Leaf
                 }
             }
             //compute histogram
-            for (uint y = 0; y < image.Editor.height; y++)
+            for (uint y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.Editor.width; x++)
+                for (uint x = 0; x < image.PixelWidth; x++)
                 {
                     binx = x / sizex;
                     biny = y / sizey;
-                    histogram[gradHist[binx, biny, bucketCount]] += image.Editor.getPixel(x, y).g;
+                    histogram[gradHist[binx, biny, bucketCount]] += image.getPixel(x, y).Value;
                 }
             }
 
@@ -634,7 +634,7 @@ namespace Leaf
             Contract.Assert(image != null);
             Contract.Assert(image.Gradient != null, "gradient is not computed");
 
-            SoftwareBitmapPixel[] colorPixel = HOGPixels.getHogPixels();
+            ColorPixel[] colorPixel = HOGPixels.getHogPixels();
 
             var histogramSizeX = blockCount;
             var histogramSizeY = blockCount;
@@ -643,8 +643,8 @@ namespace Leaf
             int angle;
             uint sizex, sizey, binx, biny;
 
-            sizex = (uint)(image.Editor.width / histogramSizeX + 1);
-            sizey = (uint)(image.Editor.height / histogramSizeY + 1);
+            sizex = (uint)(image.PixelWidth / histogramSizeX + 1);
+            sizey = (uint)(image.PixelHeight / histogramSizeY + 1);
 
             for (int i = 0; i < (uint)histogramSizeX; i++)
                 for (int j = 0; j < (uint)histogramSizeY; j++)
@@ -652,9 +652,9 @@ namespace Leaf
                     {
                         gradHist[i, j, k] = 0;
                     }
-            for (uint y = 0; y < image.Editor.height; y++)
+            for (uint y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.Editor.width; x++)
+                for (uint x = 0; x < image.PixelWidth; x++)
                 {
                     binx = x / sizex;
                     biny = y / sizey;
@@ -680,64 +680,64 @@ namespace Leaf
                     gradHist[x, y, bucketCount] = (byte)maxindex;
                 }
             }
-            for (uint y = 0; y < image.Editor.height; y++)
+            for (uint y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.Editor.width; x++)
+                for (uint x = 0; x < image.PixelWidth; x++)
                 {
                     binx = x / sizex;
                     biny = y / sizey;
                     var pixel = colorPixel[gradHist[binx, biny, bucketCount]];
-                    image.Editor.setPixel(x, y, pixel.r, pixel.g, pixel.b);
+                    image.setPixel(x, y, pixel.R, pixel.G, pixel.B);
                 }
             }
 
             return image;
         }
 
-        public static long MatchExactely(this Image first, Image second)
-        {
-            if (AreNotTheSameSize(first.Editor, second.Editor))
-                return 0;
+        //public static long MatchExactely(this Image first, Image second)
+        //{
+        //    if (AreNotTheSameSize(first.Editor, second.Editor))
+        //        return 0;
 
-            long score = 0;
+        //    long score = 0;
 
-            var equalityComparer = new PixelEqualityComparer();
+        //    var equalityComparer = new PixelEqualityComparer();
 
-            for (uint y = 0; y < first.Editor.height; y++)
-            {
-                for (uint x = 0; x < first.Editor.width; x++)
-                {
-                    SoftwareBitmapPixel pixel = first.getPixel(x, y);
-                    SoftwareBitmapPixel secondpixel = second.getPixel(x, y);
-                    if (equalityComparer.Equals(pixel, secondpixel))
-                        score += 1;
-                }
-            }
-            return score;
-        }
+        //    for (uint y = 0; y < first.PixelHeight; y++)
+        //    {
+        //        for (uint x = 0; x < first.PixelWidth; x++)
+        //        {
+        //            SoftwareBitmapPixel pixel = first.getPixel(x, y);
+        //            SoftwareBitmapPixel secondpixel = second.getPixel(x, y);
+        //            if (equalityComparer.Equals(pixel, secondpixel))
+        //                score += 1;
+        //        }
+        //    }
+        //    return score;
+        //}
 
-        public static long Match(this Image first, Image second)
-        {
-            if (AreNotTheSameSize(first.Editor, second.Editor))
-                return 0;
+        //public static long Match(this Image first, Image second)
+        //{
+        //    if (AreNotTheSameSize(first.Editor, second.Editor))
+        //        return 0;
 
-            long score = 0;
+        //    long score = 0;
 
-            for (uint y = 0; y < first.Editor.height; y++)
-            {
-                for (uint x = 0; x < first.Editor.width; x++)
-                {
-                    SoftwareBitmapPixel pixel = first.getPixel(x, y);
-                    SoftwareBitmapPixel secondpixel = second.getPixel(x, y);
-                    score += HOGPixels.comparePixels(pixel, secondpixel);
-                }
-            }
-            return score / HOGPixels.MaxScore;
-        }
+        //    for (uint y = 0; y < first.PixelHeight; y++)
+        //    {
+        //        for (uint x = 0; x < first.PixelWidth; x++)
+        //        {
+        //            SoftwareBitmapPixel pixel = first.getPixel(x, y);
+        //            SoftwareBitmapPixel secondpixel = second.getPixel(x, y);
+        //            score += HOGPixels.comparePixels(pixel, secondpixel);
+        //        }
+        //    }
+        //    return score / HOGPixels.MaxScore;
+        //}
 
-        private static bool AreNotTheSameSize(SoftwareBitmapEditor first, SoftwareBitmapEditor second)
-        {
-            return ((first.height != second.height) || (first.width != second.width));
-        }
+        //private static bool AreNotTheSameSize(SoftwareBitmapEditor first, SoftwareBitmapEditor second)
+        //{
+        //    return ((first.height != second.height) || (first.width != second.width));
+        //}
     }
 }

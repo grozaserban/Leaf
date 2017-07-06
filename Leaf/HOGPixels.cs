@@ -5,32 +5,32 @@ namespace Leaf
 {
     internal static class HOGPixels
     {
-        private static readonly SoftwareBitmapPixel[] _pixels = new SoftwareBitmapPixel[]
+        private static readonly ColorPixel[] _pixels = new ColorPixel[]
        {
-                    new SoftwareBitmapPixel() { r = 255, g = 128, b = 0   },
-                    new SoftwareBitmapPixel() { r = 255, g = 128, b = 0   },
-                    new SoftwareBitmapPixel() { r = 255, g = 255, b = 0   },
-                    new SoftwareBitmapPixel() { r = 0,   g = 255, b = 0   },
-                    new SoftwareBitmapPixel() { r = 0,   g = 255, b = 128 },
-                    new SoftwareBitmapPixel() { r = 0,   g = 255, b = 255 },
-                    new SoftwareBitmapPixel() { r = 0,   g = 0,   b = 255 },
-                    new SoftwareBitmapPixel() { r = 128, g = 0,   b = 255 },
-                    new SoftwareBitmapPixel() { r = 255, g = 0,   b = 255 }
+                    new ColorPixel(0,0 ,255, 128, 0  ),
+                    new ColorPixel(0,0 ,255, 128, 0  ),
+                    new ColorPixel(0,0 ,255, 255, 0  ),
+                    new ColorPixel(0,0 ,0,   255, 0  ),
+                    new ColorPixel(0,0 ,0,   255, 128),
+                    new ColorPixel(0,0 ,0,   255, 255),
+                    new ColorPixel(0,0 ,0,   0,   255),
+                    new ColorPixel(0,0 ,128, 0,   255),
+                    new ColorPixel(0,0 ,255, 0,   255)
        };
 
         public static int MaxScore = 16;
 
-        public static SoftwareBitmapPixel[] getHogPixels()
+        public static ColorPixel[] getHogPixels()
         {
             return _pixels;
         }
 
-        private static int getPixelNumber(SoftwareBitmapPixel inputPixel)
+        private static int getPixelNumber(ColorPixel inputPixel)
         {
             var count = 0;
             foreach (var pixel in _pixels)
             {
-                if ((inputPixel.r == pixel.r) && (inputPixel.g == pixel.g) && (inputPixel.b == pixel.b))
+                if ((inputPixel.R == pixel.R) && (inputPixel.G == pixel.G) && (inputPixel.B == pixel.B))
                     return count;
                 count++;
             }
@@ -43,7 +43,7 @@ namespace Leaf
         /// <param name="pixel1"></param>
         /// <param name="pixel2"></param>
         /// <returns></returns>
-        public static int comparePixels(SoftwareBitmapPixel pixel1, SoftwareBitmapPixel pixel2)
+        public static int comparePixels(ColorPixel pixel1, ColorPixel pixel2)
         {
             var pixel1Id = getPixelNumber(pixel1);
             var pixel2Id = getPixelNumber(pixel2);

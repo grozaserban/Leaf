@@ -1,6 +1,6 @@
-﻿using SimpleImageEditing;
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
 using Windows.Graphics.Imaging;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace Leaf
 {
@@ -8,37 +8,55 @@ namespace Leaf
     {
         private SoftwareBitmap _softwareBitmap;
 
-        public SoftwareBitmapEditor Editor { get; set; }
+        private WriteableBitmap _writeableBitmap;
 
-        public int[,] Gradient { get; set; }
+        public int PixelHeight => _softwareBitmap.PixelHeight;
+
+        public int PixelWidth => _softwareBitmap.PixelWidth;
+
+        public WriteableBitmap Editor
+        {
+            get
+            {
+                return _writeableBitmap;
+            }
+            private set { }
+        }
 
         public SoftwareBitmap SoftwareBitmap
         {
             get
             {
-                SoftwareBitmap returnSoftwarebitmap = new SoftwareBitmap(_softwareBitmap.BitmapPixelFormat,
-                                                             _softwareBitmap.PixelWidth,
-                                                             _softwareBitmap.PixelHeight, _softwareBitmap.BitmapAlphaMode);
-                Editor.Dispose();
+                SoftwareBitmap returnSoftwarebitmap = null;
+
+                _softwareBitmap.CopyFromBuffer(_writeableBitmap.PixelBuffer);
+                returnSoftwarebitmap = new SoftwareBitmap(_softwareBitmap.BitmapPixelFormat,
+                                                            _softwareBitmap.PixelWidth,
+                                                            _softwareBitmap.PixelHeight, _softwareBitmap.BitmapAlphaMode);
+
                 _softwareBitmap.CopyTo(returnSoftwarebitmap);
-                Editor = new SoftwareBitmapEditor(_softwareBitmap);
+
                 return returnSoftwarebitmap;
             }
             set
             {
                 Contract.Requires(value != null);
                 _softwareBitmap = new SoftwareBitmap(value.BitmapPixelFormat,
-                                         value.PixelWidth,
-                                         value.PixelHeight, value.BitmapAlphaMode);
+                                             value.PixelWidth,
+                                             value.PixelHeight, value.BitmapAlphaMode);
                 value.CopyTo(_softwareBitmap);
-                Editor = new SoftwareBitmapEditor(_softwareBitmap);
+
+                _writeableBitmap = new WriteableBitmap(_softwareBitmap.PixelWidth, _softwareBitmap.PixelHeight);
+                _softwareBitmap.CopyToBuffer(_writeableBitmap.PixelBuffer);
             }
         }
+
+        public int[,] Gradient { get; set; }
 
         public Image(SoftwareBitmap softwareBitmap)
         {
             Contract.Requires(softwareBitmap != null);
-            SoftwareBitmap = softwareBitmap;
+            SoftwareBitmap =softwareBitmap;
         }
 
         public Image(Image image)

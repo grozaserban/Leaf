@@ -1,53 +1,90 @@
-﻿using SimpleImageEditing;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.UI.Xaml.Media.Imaging;
+
 namespace Leaf
 {
     public static class PixelOperations
     {
-        public static void SetPixelToGrayScale(SoftwareBitmapEditor editor, uint x, uint y)
+        static int bytesPerPixel = 4;
+        public static void SetPixelToGrayScale(WriteableBitmap editor, uint x, uint y)
         {
-            SoftwareBitmapPixel pixel = getPixel(editor, x, y);
-            var gray = pixel.r + pixel.g + pixel.b;
-            gray = gray / 3;
-            editor.setPixel(x, y, (byte)gray, (byte)gray, (byte)gray);
+            var index = y * editor.PixelWidth * bytesPerPixel + x * bytesPerPixel;
+            var pixels = editor.PixelBuffer.AsStream();
+
+            pixels.Seek(index, System.IO.SeekOrigin.Begin);
+
+            var b = (byte)pixels.ReadByte();
+            var g = (byte)pixels.ReadByte();
+            var r = (byte)pixels.ReadByte();
+            //alfa
+            var average = (byte)((r + g + b)/3);
+
+            pixels.Seek(index, System.IO.SeekOrigin.Begin);
+            pixels.WriteByte(average);
+            pixels.WriteByte(average);
+            pixels.WriteByte(average);
         }
 
-        public static SoftwareBitmapPixel getPixel(SoftwareBitmapEditor editor, uint x, uint y)
+        public static GrayscalePixel getPixel(WriteableBitmap editor, uint x, uint y)
         {
-            var pixel = editor.getPixel(x, y);
-            var aux = pixel.g;
-            pixel.g = pixel.b;
-            pixel.b = aux;
-            return pixel;
+            var index = y * editor.PixelWidth * bytesPerPixel + x * bytesPerPixel;
+            var pixels = editor.PixelBuffer.AsStream();
+
+            pixels.Seek(index, System.IO.SeekOrigin.Begin);
+
+            var b = (byte)pixels.ReadByte();
+
+            return new GrayscalePixel(x, y, b);
         }
 
-        public static SoftwareBitmapPixel getPixel(this Image Image, uint x, uint y)
+        public static GrayscalePixel getPixel(this Image Image, uint x, uint y)
         {
             return getPixel(Image.Editor, x, y);
         }
 
-        public static void setPixel(this SoftwareBitmapEditor editor, uint x, uint y, byte value)
-        {
-            editor.setPixel(x, y, value, value, value);
-        }
-
         public static void setPixel(this Image image, uint x, uint y, byte value)
         {
-            image.Editor.setPixel(x, y, value, value, value);
+            image.Editor.setPixel(x, y, value);
+        }
+
+        public static void setPixel(this Image image, uint x, uint y, byte r, byte g, byte b)
+        {
+            image.Editor.setPixel(x, y, r, g, b);
+        }
+
+        private static void setPixel(this WriteableBitmap editor, uint x, uint y, byte value)
+        {
+            var index = y * editor.PixelWidth * bytesPerPixel + x * bytesPerPixel;
+            var pixels = editor.PixelBuffer.AsStream();
+
+            pixels.Seek(index, System.IO.SeekOrigin.Begin);
+            pixels.WriteByte(value);
+            pixels.WriteByte(value);
+            pixels.WriteByte(value);
+        }
+
+        private static void setPixel(this WriteableBitmap editor, uint x, uint y, byte r, byte g, byte b)
+        {
+            var index = y * editor.PixelWidth * bytesPerPixel + x * bytesPerPixel;
+            var pixels = editor.PixelBuffer.AsStream();
+
+            pixels.Seek(index, System.IO.SeekOrigin.Begin);
+            pixels.WriteByte(b);
+            pixels.WriteByte(g);
+            pixels.WriteByte(r);
         }
     }
 
-    class PixelEqualityComparer : IEqualityComparer<SoftwareBitmapPixel>
+    class PixelEqualityComparer : IEqualityComparer<GrayscalePixel>
     {
-        public bool Equals(SoftwareBitmapPixel x, SoftwareBitmapPixel y)
+        public bool Equals(GrayscalePixel x, GrayscalePixel y)
         {
-            return x.b == y.b &&
-                x.g == y.g &&
-                x.r == y.r;
+            return x.Value == y.Value;
         }
 
-        public int GetHashCode(SoftwareBitmapPixel obj)
+        public int GetHashCode(GrayscalePixel obj)
         {
             throw new NotImplementedException();
         }
