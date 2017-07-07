@@ -88,14 +88,10 @@
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
   <ItemGroup>
-    <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <None Include="project.json" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Files.cs" />
+    <Compile Include="Folders.cs" />
     <Compile Include="HOGPixels.cs" />
     <Compile Include="Image.cs" />
     <Compile Include="ImageIO.cs" />
@@ -113,6 +109,7 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="Leaf_TemporaryKey.pfx" />
+    <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Properties\Default.rd.xml" />

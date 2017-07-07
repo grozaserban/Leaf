@@ -47,7 +47,8 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         RenderTransformOrigin="0.5,0.5"
-                        Stretch="UniformToFill">
+                        Stretch="UniformToFill"
+                        Tapped="Button_Click">
 
             <!--<CaptureElement.RenderTransform>
                 <RotateTransform Angle="90" />

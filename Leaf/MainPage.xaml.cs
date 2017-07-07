@@ -118,22 +118,21 @@ namespace Leaf
                 var picturesLibrary = await StorageLibrary.GetLibraryAsync(KnownLibraryId.Pictures);
                 classifier = NeuralNetFactory.ReadWeightsFromFile(picturesLibrary.SaveFolder.Path + @"\weights.txt", 13, 6);
             }
-            var histogram = image.ToGrayScale()
-                     .GaussianFilter()
-                     .ComputeGradient()
-                     .DeleteSquare()
-                     .HistogramOfOrientedGradients(60, 13)
-                     .Normalize()
-                     .ToList();
+            image.ToGrayScale();
+            image.GaussianFilter();
+            image.ComputeGradient();
+            image.DeleteSquare();
+          
+            var histogram =  image.HistogramOfOrientedGradients(60, 13).Normalize().ToList();
             var emptyOutputs = new List<double>() { 0, 0, 0, 0, 0, 0 };
             classifier.ChangeData(histogram, emptyOutputs);
             var classification = classifier.GetClassification();
 
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
+
                 //UI code here
-                ClassTextBlock.Text = classification.Item1 + "Class";
-                ConfidenceTextBlock.Text = classification.Item2+ "Confidence";
-            });
+                ClassTextBlock.Text = Folders.PlantNames[classification.Item1] + "Class";
+                ConfidenceTextBlock.Text = classification.Item2 + "Confidence";
+
         }
 
         private async void CreateHough(Image image)
@@ -301,40 +300,40 @@ namespace Leaf
 
             Image image = new Image(capturedPhoto.Frame.SoftwareBitmap);
             Classify(image);
-            await lowLagCapture.FinishAsync();
+            lowLagCapture.FinishAsync();
         }
 
         private async void Capture_Photo_Click(object sender, RoutedEventArgs e)
         {
-            Task.Run(() => CaptureAndClassify());
+            CaptureAndClassify();
 
-            //Create JPEG image Encoding format for storing image in JPEG type
-            ImageEncodingProperties imgFormat = ImageEncodingProperties.CreateBmp();
+            ////Create JPEG image Encoding format for storing image in JPEG type
+            //ImageEncodingProperties imgFormat = ImageEncodingProperties.CreateBmp();
 
-            var rotation = captureManager.GetPreviewRotation();
-            var resolutions = captureManager.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.Photo).ToList();
-            var resolutionObj = resolutions.Last();
-            var resolution = resolutionObj as VideoEncodingProperties;
+            //var rotation = captureManager.GetPreviewRotation();
+            //var resolutions = captureManager.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.Photo).ToList();
+            //var resolutionObj = resolutions.Last();
+            //var resolution = resolutionObj as VideoEncodingProperties;
 
-            imgFormat.Height = resolution.Height;
-            imgFormat.Width = resolution.Width;
-            //  captureManager.VideoDeviceController.SetMediaStreamPropertiesAsync(MediaStreamType.Photo, imgFormat);
-            try
-            {
-                captureManager.VideoDeviceController.FlashControl.Enabled = false;
+            //imgFormat.Height = resolution.Height;
+            //imgFormat.Width = resolution.Width;
+            ////  captureManager.VideoDeviceController.SetMediaStreamPropertiesAsync(MediaStreamType.Photo, imgFormat);
+            //try
+            //{
+            //    captureManager.VideoDeviceController.FlashControl.Enabled = false;
 
-            }
-            catch
-            {
-            }
-            //captureManager.VideoDeviceController.Focus.TrySetValue(0.5);
+            //}
+            //catch
+            //{
+            //}
+            ////captureManager.VideoDeviceController.Focus.TrySetValue(0.5);
 
-            // create storage file in local app storage
-            var documentsLibrary = KnownFolders.PicturesLibrary.Path.ToString();
-            // StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("Photo.jpg", CreationCollisionOption.ReplaceExisting);
-            var file = await KnownFolders.PicturesLibrary.CreateFileAsync("leaf.bmp", CreationCollisionOption.GenerateUniqueName);
-            // take photo and store it on file location.
-            captureManager.CapturePhotoToStorageFileAsync(imgFormat, file);
+            //// create storage file in local app storage
+            //var documentsLibrary = KnownFolders.PicturesLibrary.Path.ToString();
+            //// StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("Photo.jpg", CreationCollisionOption.ReplaceExisting);
+            //var file = await KnownFolders.PicturesLibrary.CreateFileAsync("leaf.bmp", CreationCollisionOption.GenerateUniqueName);
+            //// take photo and store it on file location.
+            //captureManager.CapturePhotoToStorageFileAsync(imgFormat, file);
         }
 
         private async void Stop_Capture_Preview_Click(object sender, RoutedEventArgs e)
