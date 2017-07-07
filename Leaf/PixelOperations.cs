@@ -36,7 +36,7 @@ namespace Leaf
 
             var b = (byte)pixels.ReadByte();
 
-            return new GrayscalePixel(x, y, b);
+            return new GrayscalePixel(b);
         }
 
         public static GrayscalePixel getPixel(this Image Image, uint x, uint y)

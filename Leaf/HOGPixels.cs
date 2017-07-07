@@ -1,4 +1,4 @@
-﻿using SimpleImageEditing;
+﻿
 using System;
 
 namespace Leaf
@@ -7,15 +7,15 @@ namespace Leaf
     {
         private static readonly ColorPixel[] _pixels = new ColorPixel[]
        {
-                    new ColorPixel(0,0 ,255, 128, 0  ),
-                    new ColorPixel(0,0 ,255, 128, 0  ),
-                    new ColorPixel(0,0 ,255, 255, 0  ),
-                    new ColorPixel(0,0 ,0,   255, 0  ),
-                    new ColorPixel(0,0 ,0,   255, 128),
-                    new ColorPixel(0,0 ,0,   255, 255),
-                    new ColorPixel(0,0 ,0,   0,   255),
-                    new ColorPixel(0,0 ,128, 0,   255),
-                    new ColorPixel(0,0 ,255, 0,   255)
+                    new ColorPixel(255, 128, 0  ),
+                    new ColorPixel(255, 128, 0  ),
+                    new ColorPixel(255, 255, 0  ),
+                    new ColorPixel(0,   255, 0  ),
+                    new ColorPixel(0,   255, 128),
+                    new ColorPixel(0,   255, 255),
+                    new ColorPixel(0,   0,   255),
+                    new ColorPixel(128, 0,   255),
+                    new ColorPixel(255, 0,   255)
        };
 
         public static int MaxScore = 16;

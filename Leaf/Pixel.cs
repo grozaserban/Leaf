@@ -1,23 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Leaf
 {
-    public class ColorPixel
+    public abstract class Pixel
     {
-        public uint X { get; }
-        public uint Y { get; }
+        public enum Type { Color, Grayscale }
+        public abstract Type GetKind();
+    }
+
+    public class ColorPixel : Pixel
+    {
         public byte R { get; }
         public byte G { get; }
         public byte B { get; }
 
-        public ColorPixel(uint x, uint y, byte r, byte g, byte b)
+        public ColorPixel(byte r, byte g, byte b)
         {
-            X = x;
-            Y = y;
             R = r;
             G = g;
             B = b;
@@ -25,17 +23,36 @@ namespace Leaf
 
         public GrayscalePixel ToGrayscale()
         {
-            return new GrayscalePixel(X, Y, (byte)((R + G + B) / 3));
+            return new GrayscalePixel((byte)((R + G + B) / 3));
         }
+
+        public override Type GetKind() => Type.Color;
     }
 
-    public class GrayscalePixel
+    public class GrayscalePixel : Pixel
+    {
+        public byte Value { get; }
+
+        public GrayscalePixel(byte value)
+        {
+            Value = value;
+        }
+
+        public ColorPixel ToColor()
+        {
+            return new ColorPixel(Value, Value, Value);
+        }
+
+        public override Type GetKind() => Type.Grayscale;
+    }
+
+    public class PositionedPixel
     {
         public uint X { get; }
         public uint Y { get; }
         public byte Value { get; }
 
-        public GrayscalePixel(uint x, uint y, byte value)
+        public PositionedPixel(uint x, uint y, byte value)
         {
             X = x;
             Y = y;
@@ -44,7 +61,7 @@ namespace Leaf
 
         public ColorPixel ToColor()
         {
-            return new ColorPixel(X, Y, Value, Value, Value);
+            return new ColorPixel(Value, Value, Value);
         }
     }
 

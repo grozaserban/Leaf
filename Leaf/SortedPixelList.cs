@@ -5,9 +5,9 @@ using System.Linq;
 
 namespace Leaf
 {
-    public class SortedPixelList : IEnumerable<GrayscalePixel>
+    public class SortedPixelList : IEnumerable<PositionedPixel>
     {
-        private List<GrayscalePixel> _pixels;
+        private List<PositionedPixel> _pixels;
 
         private int _capacity;
         private int _range;
@@ -18,16 +18,16 @@ namespace Leaf
             _capacity = capacity;
             _minValue = 0;
             _range = range;
-            _pixels = new List<GrayscalePixel>(capacity);
+            _pixels = new List<PositionedPixel>(capacity);
         }
 
         public void Add(uint x, uint y, byte value)
         {
             if ((value > _minValue) || (_pixels.Count < _capacity))
-                Add(new GrayscalePixel(x, y, value));
+                Add(new PositionedPixel(x, y, value));
         }
 
-        public void Add(GrayscalePixel pixel)
+        public void Add(PositionedPixel pixel)
         {
             _pixels.RemoveAll(ex => WeakNeighbour(ex, pixel));
 
@@ -45,17 +45,17 @@ namespace Leaf
             _minValue = _pixels[_pixels.Count - 1].Value;
         }
 
-        private bool WeakNeighbour(GrayscalePixel ex, GrayscalePixel pixel)
+        private bool WeakNeighbour(PositionedPixel ex, PositionedPixel pixel)
         {
             return Neighour(ex, pixel) && ex.Value < pixel.Value;
         }
 
-        private bool StrongNeighbour(GrayscalePixel ex, GrayscalePixel pixel)
+        private bool StrongNeighbour(PositionedPixel ex, PositionedPixel pixel)
         {
             return Neighour(ex, pixel) && ex.Value >= pixel.Value;
         }
 
-        private bool Neighour(GrayscalePixel a, GrayscalePixel b)
+        private bool Neighour(PositionedPixel a, PositionedPixel b)
         {
             var distX = Math.Abs((int)a.X - b.X);
             var distY = Math.Abs((int)a.Y - b.Y);
@@ -63,7 +63,7 @@ namespace Leaf
             return distX < _range && distY < _range;
         }
 
-        public GrayscalePixel Get(int index)
+        public PositionedPixel Get(int index)
         {
             return _pixels[index];
         }
@@ -80,14 +80,14 @@ namespace Leaf
             return returnValue;
         }
 
-        public IEnumerator<GrayscalePixel> GetEnumerator()
+        public IEnumerator<PositionedPixel> GetEnumerator()
         {
-            return ((IEnumerable<GrayscalePixel>)_pixels).GetEnumerator();
+            return ((IEnumerable<PositionedPixel>)_pixels).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable<GrayscalePixel>)_pixels).GetEnumerator();
+            return ((IEnumerable<PositionedPixel>)_pixels).GetEnumerator();
         }
     }
 }
