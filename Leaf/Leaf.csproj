@@ -100,7 +100,7 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pixel.cs" />
-    <Compile Include="PixelOperations.cs" />
+    <Compile Include="Images\GrayScaleImage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SortedPixelList.cs" />
   </ItemGroup>

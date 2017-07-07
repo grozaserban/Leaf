@@ -21,7 +21,7 @@ namespace Leaf
             _pixels = new List<PositionedPixel>(capacity);
         }
 
-        public void Add(uint x, uint y, byte value)
+        public void Add(int x, int y, byte value)
         {
             if ((value > _minValue) || (_pixels.Count < _capacity))
                 Add(new PositionedPixel(x, y, value));

@@ -7,64 +7,51 @@ namespace Leaf
 {
     internal static class ImageOperations
     {
-        public static Image ToGrayScale(this Image image)
-        {
-            var editor = image.Editor;
-            for (uint y = 0; y < image.PixelHeight; y++)
-            {
-                for (uint x = 0; x < image.PixelWidth; x++)
-                {
-                    PixelOperations.SetPixelToGrayScale(editor, x, y);
-                }
-            }
-            return image;
-        }
-
-        public static Image ToBlackAndWhite(this Image image, uint tresholdPercent)
+        public static Image ToBlackAndWhite(this Image image, int tresholdPercent)
         {
             var treshold = image.Histogram().TresholdForPercent(tresholdPercent);
 
-            for (uint y = 0; y < image.PixelHeight; y++)
+            for (int y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.PixelWidth; x++)
+                for (int x = 0; x < image.PixelWidth; x++)
                 {
-                    if (image.getPixel(x, y).Value > treshold)
+                    if (image.GrayScale.GetPixel(x, y) > treshold)
                     {
-                        image.setPixel(x, y, 255);
+                        image.GrayScale.SetPixel(x, y, 255);
                     }
                     else
                     {
-                        image.setPixel(x, y, 0);
+                        image.GrayScale.SetPixel(x, y, 0);
                     }
                 }
             }
             return image;
         }
 
-        public static uint[] Histogram(this Image image)
+        public static int[] Histogram(this Image image)
         {
-            uint[] histogram = new uint[257];
+            int[] histogram = new int[257];
 
-            for (uint y = 0; y < image.PixelHeight; y++)
+            for (int y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.PixelWidth; x++)
+                for (int x = 0; x < image.PixelWidth; x++)
                 {
-                    histogram[image.getPixel(x, y).Value]++;
+                    histogram[image.GrayScale.GetPixel(x, y)]++;
                 }
             }
 
-            histogram[256] = (uint)(image.PixelHeight * image.PixelWidth);
+            histogram[256] = (int)(image.PixelHeight * image.PixelWidth);
 
             return histogram;
         }
 
-        public static uint TresholdForPercent(this uint[] histogram, uint percent)
+        public static int TresholdForPercent(this int[] histogram, int percent)
         {
             Contract.Assert(percent <= 100);
             var percentInPoints = histogram[256] * percent / 100;
 
-            uint count = 0;
-            for (uint i = 255; i >= 0; i--)
+            int count = 0;
+            for (int i = 255; i >= 0; i--)
             {
                 count += histogram[i];
                 if (count >= percentInPoints)
@@ -78,11 +65,11 @@ namespace Leaf
         {
             var pixels = new SortedPixelList(count, range);
 
-            for (uint y = 0; y < image.PixelHeight; y++)
+            for (int y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.PixelWidth; x++)
+                for (int x = 0; x < image.PixelWidth; x++)
                 {
-                    pixels.Add(x, y, image.getPixel(x, y).Value);
+                    pixels.Add(x, y, image.GrayScale.GetPixel(x, y));
                 }
             }
             return pixels;
@@ -92,7 +79,17 @@ namespace Leaf
         {
             foreach (var pixel in image.ComputeMaxPoints(count, range))
             {
-                image.setPixel(pixel.X, pixel.Y, 255, 0, 0);
+                image.GrayScale.SetPixel(pixel.X - 1, pixel.Y + 1, 255);
+                image.GrayScale.SetPixel(pixel.X, pixel.Y + 1, 255);
+                image.GrayScale.SetPixel(pixel.X + 1, pixel.Y + 1, 255);
+
+                image.GrayScale.SetPixel(pixel.X - 1, pixel.Y, 255);
+                image.GrayScale.SetPixel(pixel.X, pixel.Y, 255);
+                image.GrayScale.SetPixel(pixel.X + 1, pixel.Y, 255);
+
+                image.GrayScale.SetPixel(pixel.X - 1, pixel.Y - 1, 255);
+                image.GrayScale.SetPixel(pixel.X, pixel.Y - 1, 255);
+                image.GrayScale.SetPixel(pixel.X - 1, pixel.Y - 1, 255);
             }
 
             return image;
@@ -101,21 +98,21 @@ namespace Leaf
         public static Image Normalize(this Image image)
         {
             var max = 0;
-            for (uint y = 0; y < image.PixelHeight; y++)
+            for (int y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.PixelWidth; x++)
+                for (int x = 0; x < image.PixelWidth; x++)
                 {
-                    if (image.getPixel(x, y).Value > max)
-                        max = image.getPixel(x, y).Value;
+                    if (image.GrayScale.GetPixel(x, y) > max)
+                        max = image.GrayScale.GetPixel(x, y);
                 }
             }
             var normalizationFactor = (double)255 / max;
 
-            for (uint y = 0; y < image.PixelHeight; y++)
+            for (int y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.PixelWidth; x++)
+                for (int x = 0; x < image.PixelWidth; x++)
                 {
-                    image.setPixel(x, y, (byte)(image.getPixel(x, y).Value * normalizationFactor));
+                    image.GrayScale.SetPixel(x, y, (byte)(image.GrayScale.GetPixel(x, y) * normalizationFactor));
                 }
             }
             return image;
@@ -123,67 +120,67 @@ namespace Leaf
 
         public static Image DeleteSquare(this Image image)
         {
-            uint heightMidle = (uint)image.PixelHeight / 2;
-            uint widthMidle = (uint)image.PixelWidth / 2;
-            for (uint y = 0; y < image.PixelHeight; y++)
+            int heightMidle = (int)image.PixelHeight / 2;
+            int widthMidle = (int)image.PixelWidth / 2;
+            for (int y = 0; y < image.PixelHeight; y++)
             {
-                if (image.getPixel(widthMidle, y).Value > 10)
+                if (image.GrayScale.GetPixel(widthMidle, y) > 10)
                 {
-                    for (uint x = 0; x < image.PixelWidth; x++)
+                    for (int x = 0; x < image.PixelWidth; x++)
                     {
-                        image.setPixel(x, y, 0);
-                        image.setPixel(x, y + 1, 0);
-                        image.setPixel(x, y + 2, 0);
-                        image.setPixel(x, y + 3, 0);
-                        image.setPixel(x, y + 4, 0);
+                        image.GrayScale.SetPixel(x, y, 0);
+                        image.GrayScale.SetPixel(x, y + 1, 0);
+                        image.GrayScale.SetPixel(x, y + 2, 0);
+                        image.GrayScale.SetPixel(x, y + 3, 0);
+                        image.GrayScale.SetPixel(x, y + 4, 0);
                     }
                     break;
                 }
             }
 
-            for (uint y = (uint)image.PixelHeight - 1; y > 0; y--)
+            for (int y = (int)image.PixelHeight - 1; y > 0; y--)
             {
-                if (image.getPixel(widthMidle, y).Value > 10)
+                if (image.GrayScale.GetPixel(widthMidle, y) > 10)
                 {
-                    for (uint x = 0; x < image.PixelWidth; x++)
+                    for (int x = 0; x < image.PixelWidth; x++)
                     {
-                        image.setPixel(x, y, 0);
-                        image.setPixel(x, y - 1, 0);
-                        image.setPixel(x, y - 2, 0);
-                        image.setPixel(x, y - 3, 0);
-                        image.setPixel(x, y - 4, 0);
+                        image.GrayScale.SetPixel(x, y, 0);
+                        image.GrayScale.SetPixel(x, y - 1, 0);
+                        image.GrayScale.SetPixel(x, y - 2, 0);
+                        image.GrayScale.SetPixel(x, y - 3, 0);
+                        image.GrayScale.SetPixel(x, y - 4, 0);
                     }
                     break;
                 }
             }
 
-            for (uint x = 0; x < image.PixelWidth; x++)
+            for (int x = 0; x < image.PixelWidth; x++)
             {
-                if (image.getPixel(x, heightMidle).Value > 10)
+                if (image.GrayScale.GetPixel(x, heightMidle) > 10)
                 {
-                    for (uint y = 0; y < image.PixelHeight; y++)
+                    for (int y = 0; y < image.PixelHeight; y++)
                     {
-                        image.setPixel(x, y, 0);
-                        image.setPixel(x + 1, y, 0);
-                        image.setPixel(x + 2, y, 0);
-                        image.setPixel(x + 3, y, 0);
-                        image.setPixel(x + 4, y, 0);
+                        image.GrayScale.SetPixel(x, y, 0);
+                        image.GrayScale.SetPixel(x + 1, y, 0);
+                        image.GrayScale.SetPixel(x + 2, y, 0);
+                        image.GrayScale.SetPixel(x + 3, y, 0);
+                        image.GrayScale.SetPixel(x + 4, y, 0);
                     }
                     break;
                 }
             }
 
-            for (uint x = (uint)image.PixelWidth - 1; x > 0; x--)
+            for (int x = (int)image.PixelWidth - 1; x > 0; x--)
             {
-                if (image.getPixel(x, heightMidle).Value > 10)
+                if (image.GrayScale.GetPixel(x, heightMidle) > 10)
                 {
-                    for (uint y = 0; y < image.PixelHeight; y++)
+                    for (int y = 0; y < image.PixelHeight; y++)
                     {
-                        image.setPixel(x, y, 0);
-                        image.setPixel(x - 1, y, 0);
-                        image.setPixel(x - 2, y, 0);
-                        image.setPixel(x - 3, y, 0);
-                        image.setPixel(x - 4, y, 0);
+                        image.GrayScale.SetPixel(x, y, 0);
+                        image.GrayScale.SetPixel(x - 1, y, 0);
+                        image.GrayScale.SetPixel(x - 2, y, 0);
+                        image.GrayScale.SetPixel(x - 3, y, 0);
+                        image.GrayScale.SetPixel(x - 4, y, 0);
                     }
                     break;
                 }
@@ -195,7 +192,7 @@ namespace Leaf
         public static Image GaussianFilter(this Image image)
         {
             var initialImage = new Image(image);
-            GrayscalePixel pixel;
+            byte pixel;
 
             double sigma = 0.8;
             int n = (int)(6 * sigma);
@@ -221,21 +218,21 @@ namespace Leaf
                     gausSum = gausSum + gaus[i, j];
                 }
 
-            for (uint y = 2; y < image.PixelHeight - 2; y++)
+            for (int y = 2; y < image.PixelHeight - 2; y++)
             {
-                for (uint x = 2; x < image.PixelWidth - 2; x++)
+                for (int x = 2; x < image.PixelWidth - 2; x++)
                 {
                     aux = 0;
                     for (int yvar = -2; yvar < 3; yvar++)
                     {
                         for (int xvar = -2; xvar < 3; xvar++)
                         {
-                            pixel = initialImage.getPixel((uint)(x + xvar), (uint)(y + yvar));
-                            aux = aux + pixel.Value * gaus[xvar + 2, yvar + 2];
+                            pixel = initialImage.GrayScale.GetPixel(x + xvar, y + yvar);
+                            aux = aux + pixel * gaus[xvar + 2, yvar + 2];
                         }
                     }
                     aux = aux / gausSum;
-                    image.setPixel(x, y, (byte)aux);
+                    image.GrayScale.SetPixel(x, y, (byte)aux);
                 }
             }
             return image;
@@ -245,7 +242,7 @@ namespace Leaf
         {
             // wrong filter
             var initialImage = new Image(image);
-            GrayscalePixel pixel;
+            byte pixel;
 
             double sigma = 0.8;
             int n = (int)(6 * sigma);
@@ -272,21 +269,21 @@ namespace Leaf
                     gausSum += gaus[xvar, yvar];
                 }
             }
-            for (uint y = 2; y < image.PixelHeight - 2; y++)
+            for (int y = 2; y < image.PixelHeight - 2; y++)
             {
-                for (uint x = 2; x < image.PixelWidth - 2; x++)
+                for (int x = 2; x < image.PixelWidth - 2; x++)
                 {
                     aux = 0;
                     for (int yvar = -2; yvar < 3; yvar++)
                     {
                         for (int xvar = -2; xvar < 3; xvar++)
                         {
-                            pixel = initialImage.getPixel((uint)(x + xvar), (uint)(y + yvar));
-                            aux = aux + pixel.Value * gaus[xvar + 2, yvar + 2];
+                            pixel = initialImage.GrayScale.GetPixel(x + xvar, y + yvar);
+                            aux = aux + pixel * gaus[xvar + 2, yvar + 2];
                         }
                     }
                     aux = aux / gausSum;
-                    image.setPixel(x, y, (byte)aux);
+                    image.GrayScale.SetPixel(x, y, (byte)aux);
                 }
             }
             return image;
@@ -296,21 +293,21 @@ namespace Leaf
         {
             var initialImage = new Image(image);
 
-            for (uint y = 1; y < image.PixelHeight - 1; y++)
+            for (int y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.PixelWidth - 1; x++)
+                for (int x = 1; x < image.PixelWidth - 1; x++)
                 {
                     var neighbors =
-                        initialImage.getPixel(x - 1, y - 1).Value +
-                        initialImage.getPixel(x - 1, y).Value +
-                        initialImage.getPixel(x - 1, y + 1).Value +
-                        initialImage.getPixel(x, y - 1).Value +
-                        initialImage.getPixel(x, y).Value +
-                        initialImage.getPixel(x, y + 1).Value +
-                        initialImage.getPixel(x + 1, y - 1).Value +
-                        initialImage.getPixel(x + 1, y).Value +
-                        initialImage.getPixel(x + 1, y + 1).Value;
-                    image.setPixel(x, y, (byte)(neighbors != 0 ? 255 : 0));
+                        initialImage.GrayScale.GetPixel(x - 1, y - 1) +
+                        initialImage.GrayScale.GetPixel(x - 1, y) +
+                        initialImage.GrayScale.GetPixel(x - 1, y + 1) +
+                        initialImage.GrayScale.GetPixel(x, y - 1) +
+                        initialImage.GrayScale.GetPixel(x, y) +
+                        initialImage.GrayScale.GetPixel(x, y + 1) +
+                        initialImage.GrayScale.GetPixel(x + 1, y - 1) +
+                        initialImage.GrayScale.GetPixel(x + 1, y) +
+                        initialImage.GrayScale.GetPixel(x + 1, y + 1);
+                    image.GrayScale.SetPixel(x, y, (byte)(neighbors != 0 ? 255 : 0));
                 }
             }
             return image;
@@ -320,22 +317,22 @@ namespace Leaf
         {
             var initialImage = new Image(image);
 
-            for (uint y = 1; y < image.PixelHeight - 1; y++)
+            for (int y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.PixelWidth - 1; x++)
+                for (int x = 1; x < image.PixelWidth - 1; x++)
                 {
                     var neighbors =
-                        initialImage.getPixel(x - 1, y - 1).Value +
-                        initialImage.getPixel(x - 1, y).Value +
-                        initialImage.getPixel(x - 1, y + 1).Value +
-                        initialImage.getPixel(x, y - 1).Value +
-                        initialImage.getPixel(x, y).Value +
-                        initialImage.getPixel(x, y + 1).Value +
-                        initialImage.getPixel(x + 1, y - 1).Value +
-                        initialImage.getPixel(x + 1, y).Value +
-                        initialImage.getPixel(x + 1, y + 1).Value;
+                        initialImage.GrayScale.GetPixel(x - 1, y - 1) +
+                        initialImage.GrayScale.GetPixel(x - 1, y) +
+                        initialImage.GrayScale.GetPixel(x - 1, y + 1) +
+                        initialImage.GrayScale.GetPixel(x, y - 1) +
+                        initialImage.GrayScale.GetPixel(x, y) +
+                        initialImage.GrayScale.GetPixel(x, y + 1) +
+                        initialImage.GrayScale.GetPixel(x + 1, y - 1) +
+                        initialImage.GrayScale.GetPixel(x + 1, y) +
+                        initialImage.GrayScale.GetPixel(x + 1, y + 1);
                     neighbors /= 255;
-                    image.setPixel(x, y, (byte)(neighbors == 9 ? 255 : 0));
+                    image.GrayScale.SetPixel(x, y, (byte)(neighbors == 9 ? 255 : 0));
                 }
             }
             return image;
@@ -345,19 +342,19 @@ namespace Leaf
         {
             var initialImage = new Image(image);
 
-            for (uint y = 1; y < image.PixelHeight - 1; y++)
+            for (int y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.PixelWidth - 1; x++)
+                for (int x = 1; x < image.PixelWidth - 1; x++)
                 {
-                    if (initialImage.getPixel(x, y).Value == 255)
+                    if (initialImage.GrayScale.GetPixel(x, y) == 255)
                     {
                         var neighbors =
-                            initialImage.getPixel(x - 1, y).Value +
-                            initialImage.getPixel(x, y - 1).Value +
-                            initialImage.getPixel(x, y + 1).Value +
-                            initialImage.getPixel(x + 1, y).Value;
+                            initialImage.GrayScale.GetPixel(x - 1, y) +
+                            initialImage.GrayScale.GetPixel(x, y - 1) +
+                            initialImage.GrayScale.GetPixel(x, y + 1) +
+                            initialImage.GrayScale.GetPixel(x + 1, y);
                         neighbors /= 255;
-                        image.setPixel(x, y, (byte)(neighbors == 0 ? 0 : 255));
+                        image.GrayScale.SetPixel(x, y, (byte)(neighbors == 0 ? 0 : 255));
                     }
                 }
             }
@@ -369,24 +366,24 @@ namespace Leaf
             //not working properly
             var initialImage = new Image(image);
 
-            for (uint y = 1; y < image.PixelHeight - 1; y++)
+            for (int y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.PixelWidth - 1; x++)
+                for (int x = 1; x < image.PixelWidth - 1; x++)
                 {
-                    if (initialImage.getPixel(x, y).Value == 255)
+                    if (initialImage.GrayScale.GetPixel(x, y) == 255)
                     {
                         var widthDifference =
-                            initialImage.getPixel(x + 1, y).Value -
-                            initialImage.getPixel(x - 1, y).Value;
+                            initialImage.GrayScale.GetPixel(x + 1, y) -
+                            initialImage.GrayScale.GetPixel(x - 1, y);
                         var diagonalDifference =
-                            initialImage.getPixel(x + 1, y + 1).Value -
-                            initialImage.getPixel(x - 1, y - 1).Value;
+                            initialImage.GrayScale.GetPixel(x + 1, y + 1) -
+                            initialImage.GrayScale.GetPixel(x - 1, y - 1);
                         var heightDifference =
-                            initialImage.getPixel(x, y + 1).Value -
-                            initialImage.getPixel(x, y - 1).Value;
+                            initialImage.GrayScale.GetPixel(x, y + 1) -
+                            initialImage.GrayScale.GetPixel(x, y - 1);
                         var smallDiagonal =
-                            initialImage.getPixel(x - 1, y + 1).Value -
-                            initialImage.getPixel(x + 1, y - 1).Value;
+                            initialImage.GrayScale.GetPixel(x - 1, y + 1) -
+                            initialImage.GrayScale.GetPixel(x + 1, y - 1);
 
                         var count = 0;
                         count = widthDifference == 255 ? count++ : count;
@@ -395,29 +392,29 @@ namespace Leaf
                         count = smallDiagonal == 255 ? count++ : count;
 
                         if (count > 1)
-                            image.setPixel(x, y, 0);
+                            image.GrayScale.SetPixel(x, y, 0);
                     }
                 }
             }
 
-            for (uint y = 1; y < image.PixelHeight - 1; y++)
+            for (int y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.PixelWidth - 1; x++)
+                for (int x = 1; x < image.PixelWidth - 1; x++)
                 {
-                    if (initialImage.getPixel(x, y).Value == 255)
+                    if (initialImage.GrayScale.GetPixel(x, y) == 255)
                     {
                         var widthDifference =
-                            initialImage.getPixel(x - 1, y).Value -
-                            initialImage.getPixel(x + 1, y).Value;
+                            initialImage.GrayScale.GetPixel(x - 1, y) -
+                            initialImage.GrayScale.GetPixel(x + 1, y);
                         var diagonalDifference =
-                            initialImage.getPixel(x - 1, y - 1).Value -
-                            initialImage.getPixel(x + 1, y + 1).Value;
+                            initialImage.GrayScale.GetPixel(x - 1, y - 1) -
+                            initialImage.GrayScale.GetPixel(x + 1, y + 1);
                         var heightDifference =
-                            initialImage.getPixel(x, y - 1).Value -
-                            initialImage.getPixel(x, y + 1).Value;
+                            initialImage.GrayScale.GetPixel(x, y - 1) -
+                            initialImage.GrayScale.GetPixel(x, y + 1);
                         var smallDiagonal =
-                            initialImage.getPixel(x + 1, y - 1).Value -
-                            initialImage.getPixel(x - 1, y + 1).Value;
+                            initialImage.GrayScale.GetPixel(x + 1, y - 1) -
+                            initialImage.GrayScale.GetPixel(x - 1, y + 1);
 
                         var count = 0;
                         count = widthDifference == 255 ? count++ : count;
@@ -426,7 +423,7 @@ namespace Leaf
                         count = smallDiagonal == 255 ? count++ : count;
 
                         if (count > 1)
-                            image.setPixel(x, y, 0);
+                            image.GrayScale.SetPixel(x, y, 0);
                     }
                 }
             }
@@ -450,12 +447,12 @@ namespace Leaf
                     gradient[j, i] = 0;
                 }
 
-            for (uint y = 1; y < image.PixelHeight - 1; y++)
+            for (int y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.PixelWidth - 1; x++)
+                for (int x = 1; x < image.PixelWidth - 1; x++)
                 {
-                    magnX = initialImage.getPixel(x, y + 1).Value - initialImage.getPixel(x, y - 1).Value;
-                    magnY = initialImage.getPixel(x + 1, y).Value - initialImage.getPixel(x - 1, y).Value;
+                    magnX = initialImage.GrayScale.GetPixel(x, y + 1) - initialImage.GrayScale.GetPixel(x, y - 1);
+                    magnY = initialImage.GrayScale.GetPixel(x + 1, y) - initialImage.GrayScale.GetPixel(x - 1, y);
                     magn[x, y] = Math.Sqrt(magnX * magnX + magnY * magnY) > 255 ? (byte)255 : (byte)Math.Sqrt(magnX * magnX + magnY * magnY);
                     gradient[x, y] = (int)(Math.Atan2(magnY, magnX) * 180 / Math.PI);
                     gradient[x, y] = gradient[x, y] > 0 ? gradient[x, y] : gradient[x, y] + 360;
@@ -464,12 +461,12 @@ namespace Leaf
             }
 
             max = 255 / max;
-            for (uint y = 1; y < image.PixelHeight - 1; y++)
+            for (int y = 1; y < image.PixelHeight - 1; y++)
             {
-                for (uint x = 1; x < image.PixelWidth - 1; x++)
+                for (int x = 1; x < image.PixelWidth - 1; x++)
                 {
                     magn[x, y] = (byte)(magn[x, y] * max);
-                    image.setPixel(x, y, magn[x, y]);
+                    image.GrayScale.SetPixel(x, y, magn[x, y]);
                 }
             }
 
@@ -490,19 +487,19 @@ namespace Leaf
             int[][] houghAux = new int[maxTheta][];
             int maxPixel = 0;
 
-            for (uint x = 0; x < hough.PixelWidth; x++)
+            for (int x = 0; x < hough.PixelWidth; x++)
             {
                 houghAux[x] = new int[maxP * 2]; //*2
-                for (uint y = 0; y < hough.PixelHeight; y++)
+                for (int y = 0; y < hough.PixelHeight; y++)
                 {
                     houghAux[x][y] = 0;
                 }
             }
             //numaram punctele
-            for (uint y = 0; y < image.PixelHeight; y++)
-                for (uint x = 0; x < image.PixelWidth; x++)
+            for (int y = 0; y < image.PixelHeight; y++)
+                for (int x = 0; x < image.PixelWidth; x++)
                 {
-                    if (image.getPixel(x, y).Value > 40)
+                    if (image.GrayScale.GetPixel(x, y) > 40)
                     {
                         P[n] = new Point(x, y);
                         n++;
@@ -536,10 +533,10 @@ namespace Leaf
             }
             double normalizationFactor = (double)255 / maxPixel;
 
-            for (uint x = 0; x < hough.PixelWidth; x++)
-                for (uint y = 0; y < hough.PixelHeight; y++)
+            for (int x = 0; x < hough.PixelWidth; x++)
+                for (int y = 0; y < hough.PixelHeight; y++)
                 {
-                    hough.setPixel(x, y, (byte)(houghAux[x][y] * normalizationFactor));
+                    hough.GrayScale.SetPixel(x, y, (byte)(houghAux[x][y] * normalizationFactor));
                 }
 
             return hough;
@@ -558,34 +555,34 @@ namespace Leaf
             byte[,,] gradHist = new byte[histogramSizeX, histogramSizeY, bucketCount + 1];
             int[] histogram = new int[bucketCount];
             int angle;
-            uint sizex, sizey, binx, biny;
+            int sizex, sizey, binx, biny;
 
-            sizex = (uint)(image.PixelWidth / histogramSizeX + 1);
-            sizey = (uint)(image.PixelHeight / histogramSizeY + 1);
+            sizex = (int)(image.PixelWidth / histogramSizeX + 1);
+            sizey = (int)(image.PixelHeight / histogramSizeY + 1);
 
-            for (int i = 0; i < (uint)histogramSizeX; i++)
-                for (int j = 0; j < (uint)histogramSizeY; j++)
+            for (int i = 0; i < (int)histogramSizeX; i++)
+                for (int j = 0; j < (int)histogramSizeY; j++)
                     for (int k = 0; k < 9; k++)
                     {
                         gradHist[i, j, k] = 0;
                     }
             // compute gradients for each angle
-            for (uint y = 0; y < image.PixelHeight; y++)
+            for (int y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.PixelWidth; x++)
+                for (int x = 0; x < image.PixelWidth; x++)
                 {
                     binx = x / sizex;
                     biny = y / sizey;
                     angle = image.Gradient[x, y] / bucketAngles;
                     if (angle >= bucketCount)
-                        angle = 0; 
+                        angle = 0;
                     gradHist[binx, biny, angle]++;
                 }
             }
             //compute max gradient
-            for (uint y = 0; y < (uint)histogramSizeX; y++)
+            for (int y = 0; y < (int)histogramSizeX; y++)
             {
-                for (uint x = 0; x < (uint)histogramSizeY; x++)
+                for (int x = 0; x < (int)histogramSizeY; x++)
                 {
                     var max = 0;
                     var maxindex = 0;
@@ -601,13 +598,13 @@ namespace Leaf
                 }
             }
             //compute histogram
-            for (uint y = 0; y < image.PixelHeight; y++)
+            for (int y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.PixelWidth; x++)
+                for (int x = 0; x < image.PixelWidth; x++)
                 {
                     binx = x / sizex;
                     biny = y / sizey;
-                    histogram[gradHist[binx, biny, bucketCount]] += image.getPixel(x, y).Value;
+                    histogram[gradHist[binx, biny, bucketCount]] += image.GrayScale.GetPixel(x, y);
                 }
             }
 
@@ -618,12 +615,12 @@ namespace Leaf
         {
             var max = 0;
             double[] normalizedValues = new double[array.Length];
-            foreach(var value in array)
+            foreach (var value in array)
             {
                 if (value > max)
                     max = value;
             }
-            for (int i= 0; i< array.Length; i++)
+            for (int i = 0; i < array.Length; i++)
                 normalizedValues[i] = (double)array[i] / max;
 
             return normalizedValues;
@@ -641,20 +638,20 @@ namespace Leaf
             var bucketAngles = 360 / bucketCount;
             byte[,,] gradHist = new byte[histogramSizeX, histogramSizeY, bucketCount + 1];
             int angle;
-            uint sizex, sizey, binx, biny;
+            int sizex, sizey, binx, biny;
 
-            sizex = (uint)(image.PixelWidth / histogramSizeX + 1);
-            sizey = (uint)(image.PixelHeight / histogramSizeY + 1);
+            sizex = (int)(image.PixelWidth / histogramSizeX + 1);
+            sizey = (int)(image.PixelHeight / histogramSizeY + 1);
 
-            for (int i = 0; i < (uint)histogramSizeX; i++)
-                for (int j = 0; j < (uint)histogramSizeY; j++)
+            for (int i = 0; i < (int)histogramSizeX; i++)
+                for (int j = 0; j < (int)histogramSizeY; j++)
                     for (int k = 0; k < 9; k++)
                     {
                         gradHist[i, j, k] = 0;
                     }
-            for (uint y = 0; y < image.PixelHeight; y++)
+            for (int y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.PixelWidth; x++)
+                for (int x = 0; x < image.PixelWidth; x++)
                 {
                     binx = x / sizex;
                     biny = y / sizey;
@@ -663,9 +660,9 @@ namespace Leaf
                     gradHist[binx, biny, angle]++;
                 }
             }
-            for (uint y = 0; y < (uint)histogramSizeX; y++)
+            for (int y = 0; y < (int)histogramSizeX; y++)
             {
-                for (uint x = 0; x < (uint)histogramSizeY; x++)
+                for (int x = 0; x < (int)histogramSizeY; x++)
                 {
                     var max = 0;
                     var maxindex = 0;
@@ -680,14 +677,14 @@ namespace Leaf
                     gradHist[x, y, bucketCount] = (byte)maxindex;
                 }
             }
-            for (uint y = 0; y < image.PixelHeight; y++)
+            for (int y = 0; y < image.PixelHeight; y++)
             {
-                for (uint x = 0; x < image.PixelWidth; x++)
+                for (int x = 0; x < image.PixelWidth; x++)
                 {
                     binx = x / sizex;
                     biny = y / sizey;
                     var pixel = colorPixel[gradHist[binx, biny, bucketCount]];
-                    image.setPixel(x, y, pixel.R, pixel.G, pixel.B);
+                    image.GrayScale.SetPixel(x, y, (byte)((pixel.R+ pixel.G+ pixel.B)/3));
                 }
             }
 
@@ -703,12 +700,12 @@ namespace Leaf
 
         //    var equalityComparer = new PixelEqualityComparer();
 
-        //    for (uint y = 0; y < first.PixelHeight; y++)
+        //    for (int y = 0; y < first.PixelHeight; y++)
         //    {
-        //        for (uint x = 0; x < first.PixelWidth; x++)
+        //        for (int x = 0; x < first.PixelWidth; x++)
         //        {
-        //            SoftwareBitmapPixel pixel = first.getPixel(x, y);
-        //            SoftwareBitmapPixel secondpixel = second.getPixel(x, y);
+        //            SoftwareBitmapPixel pixel = first.Editor.GetPixel(x, y);
+        //            SoftwareBitmapPixel secondpixel = second.Editor.GetPixel(x, y);
         //            if (equalityComparer.Equals(pixel, secondpixel))
         //                score += 1;
         //        }
@@ -723,12 +720,12 @@ namespace Leaf
 
         //    long score = 0;
 
-        //    for (uint y = 0; y < first.PixelHeight; y++)
+        //    for (int y = 0; y < first.PixelHeight; y++)
         //    {
-        //        for (uint x = 0; x < first.PixelWidth; x++)
+        //        for (int x = 0; x < first.PixelWidth; x++)
         //        {
-        //            SoftwareBitmapPixel pixel = first.getPixel(x, y);
-        //            SoftwareBitmapPixel secondpixel = second.getPixel(x, y);
+        //            SoftwareBitmapPixel pixel = first.Editor.GetPixel(x, y);
+        //            SoftwareBitmapPixel secondpixel = second.Editor.GetPixel(x, y);
         //            score += HOGPixels.comparePixels(pixel, secondpixel);
         //        }
         //    }

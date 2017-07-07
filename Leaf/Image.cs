@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics.Contracts;
+using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Graphics.Imaging;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -10,15 +12,30 @@ namespace Leaf
 
         private WriteableBitmap _writeableBitmap;
 
+        private GrayScaleImage _grayscaleImage;
+
         public int PixelHeight => _softwareBitmap.PixelHeight;
 
         public int PixelWidth => _softwareBitmap.PixelWidth;
 
-        public WriteableBitmap Editor
+        private byte[] getBitmap(WriteableBitmap writeableBitmap)
+        {
+            var memoryStream = new MemoryStream();
+            writeableBitmap.PixelBuffer.AsStream().CopyTo(memoryStream);
+            return memoryStream.ToArray();
+        }
+
+        private void BitmapToWriteableBitmap(WriteableBitmap writeableBitmap, byte[] bitmap)
+        {
+            //writeableBitmap.PixelBuffer.AsStream().Flush();
+            writeableBitmap.PixelBuffer.AsStream().Write(bitmap, 0, bitmap.Length);
+        }
+
+        public GrayScaleImage GrayScale
         {
             get
             {
-                return _writeableBitmap;
+                return _grayscaleImage;
             }
             private set { }
         }
@@ -28,6 +45,8 @@ namespace Leaf
             get
             {
                 SoftwareBitmap returnSoftwarebitmap = null;
+
+                _grayscaleImage.CopyToStream(_writeableBitmap.PixelBuffer.AsStream());
 
                 _softwareBitmap.CopyFromBuffer(_writeableBitmap.PixelBuffer);
                 returnSoftwarebitmap = new SoftwareBitmap(_softwareBitmap.BitmapPixelFormat,
@@ -48,6 +67,10 @@ namespace Leaf
 
                 _writeableBitmap = new WriteableBitmap(_softwareBitmap.PixelWidth, _softwareBitmap.PixelHeight);
                 _softwareBitmap.CopyToBuffer(_writeableBitmap.PixelBuffer);
+
+                _grayscaleImage = new GrayScaleImage(_softwareBitmap.PixelWidth,
+                                                     _softwareBitmap.PixelHeight,
+                                                     _writeableBitmap.PixelBuffer.AsStream());
             }
         }
 
@@ -56,7 +79,7 @@ namespace Leaf
         public Image(SoftwareBitmap softwareBitmap)
         {
             Contract.Requires(softwareBitmap != null);
-            SoftwareBitmap =softwareBitmap;
+            SoftwareBitmap = softwareBitmap;
         }
 
         public Image(Image image)

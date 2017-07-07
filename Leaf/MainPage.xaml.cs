@@ -33,9 +33,6 @@ namespace Leaf
         {
             InitializeComponent();
             NavigationCacheMode = NavigationCacheMode.Required;
-
-            //@"C:\Users\Serban\Pictures\20+\weights.txt"
-           // classifier = NeuralNetFactory.ReadWeightsFromFile(KnownFolders.PicturesLibrary.Path + @"weights.txt",13,6);
         }
 
         /// <summary>
@@ -48,7 +45,6 @@ namespace Leaf
             // TODO: Prepare page for display here.
 
             captureManager = new MediaCapture();    //Define MediaCapture object
-                                                    //    MediaCaptureInitializationSettings mediaCaptureSettings;
 
             await captureManager.InitializeAsync();   //Initialize MediaCapture and
             capturePreview.Source = captureManager;
@@ -56,6 +52,15 @@ namespace Leaf
             if (IsMobile)
                 captureManager.SetPreviewRotation(VideoRotation.Clockwise90Degrees);
             await captureManager.StartPreviewAsync();  //Start camera capturing
+
+            if (classifier == null)
+            {
+                var picturesLibrary = await StorageLibrary.GetLibraryAsync(KnownLibraryId.Pictures);
+                await Task.Run(() =>
+                {
+                    classifier = NeuralNetFactory.ReadWeightsFromFile(picturesLibrary.SaveFolder.Path + @"\weights.txt", 13, 6);
+                });
+            }
 
             // TODO: If your application contains multiple pages, ensure that you are
             // handling the hardware Back button by registering for the
@@ -88,10 +93,6 @@ namespace Leaf
             await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
             await Task.Delay(timeSpan);
 
-            image.ToGrayScale();
-            await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-      //      await Task.Delay(timeSpan);
-
             image.GaussianFilter();
             await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
      //       await Task.Delay(timeSpan);
@@ -113,12 +114,7 @@ namespace Leaf
 
         private async void Classify(Image image)
         {
-            if (classifier == null)
-            {
-                var picturesLibrary = await StorageLibrary.GetLibraryAsync(KnownLibraryId.Pictures);
-                classifier = NeuralNetFactory.ReadWeightsFromFile(picturesLibrary.SaveFolder.Path + @"\weights.txt", 13, 6);
-            }
-            image.ToGrayScale();
+
             image.GaussianFilter();
             image.ComputeGradient();
             image.DeleteSquare();
@@ -130,8 +126,8 @@ namespace Leaf
 
 
                 //UI code here
-                ClassTextBlock.Text = Folders.PlantNames[classification.Item1] + "Class";
-                ConfidenceTextBlock.Text = classification.Item2 + "Confidence";
+                ClassTextBlock.Text = Folders.PlantNames[classification.Item1] + " Class";
+                ConfidenceTextBlock.Text = classification.Item2 + "% Confidence";
 
         }
 
@@ -167,7 +163,6 @@ namespace Leaf
                 {
                     var image = new Image(await ImageIO.LoadSoftwareBitmapFromFile(storageFile));
                     var imageHistogram = image
-                        .ToGrayScale()
                         .GaussianFilter()
                         .ComputeGradient()
                         .DeleteSquare()
@@ -203,7 +198,6 @@ namespace Leaf
                 {
                     var image = new Image(await ImageIO.LoadSoftwareBitmapFromFile(storageFile));
                     var histogram = image
-                        .ToGrayScale()
                         .GaussianFilter()
                         .ComputeGradient()
                         .DeleteSquare()
@@ -237,7 +231,6 @@ namespace Leaf
                 foreach (var storageFile in leafStorageFiles)
                 {
                     var image = new Image(await ImageIO.LoadSoftwareBitmapFromFile(storageFile));
-                    image.ToGrayScale();
                     ImageIO.WriteToFile(gray, "leaf", image.SoftwareBitmap);
 
                     image.GaussianFilter();
@@ -271,8 +264,7 @@ namespace Leaf
             var storageFolder = await KnownFolders.PicturesLibrary.GetFolderAsync("HOG60");
             var storageFiles = await storageFolder.GetFilesAsync(Windows.Storage.Search.CommonFileQuery.OrderByDate);
 
-            var image = new Image(await ImageIO.LoadSoftwareBitmapFromFile());
-            image.ToGrayScale();  
+            var image = new Image(await ImageIO.LoadSoftwareBitmapFromFile()); 
             image.GaussianFilter();
             image.ComputeGradient();
             image.DrawHistogramOfOrientedGradients(20, 9);
