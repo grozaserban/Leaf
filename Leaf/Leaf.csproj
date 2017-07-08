@@ -91,7 +91,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="HistogramOfOrientedGradients.cs" />
+    <Compile Include="DataManager.cs" />
     <Compile Include="Imaging\CaptureManagerWrapper.cs" />
     <Compile Include="Folders.cs" />
     <Compile Include="HOGPixels.cs" />

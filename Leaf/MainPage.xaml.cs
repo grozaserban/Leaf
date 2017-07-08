@@ -111,107 +111,11 @@ namespace Leaf
 
         private async void LoadImages(object sender, RoutedEventArgs e)
         {
-            Task.Run(() => CreateSubfoldersAndHough(sender, e));
-        
-            //  Task.Run(() =>WriteHOGToFiles(sender, e));
-      
-            //WriteHOGAverageToFiles(sender, e);
-        }
+             await Task.Run(() => DataManager.CreateSubfoldersAndHough("20+"));
 
-        private async void WriteHOGAverageToFiles(object sender, RoutedEventArgs e)
-        {
-            var appFolder = await KnownFolders.PicturesLibrary.GetFolderAsync("LeafHogs");
-            string leafTypeMaxPoints = Folders.Names.Length + Environment.NewLine;
-            foreach (var folderName in Folders.Names)
-            {
-                var leafTypeFolder = await appFolder.GetFolderAsync(folderName);
-                var leafStorageFiles = await leafTypeFolder.GetFilesAsync(Windows.Storage.Search.CommonFileQuery.OrderByDate);
-                double[] histogram = new double[13];
+          //    HistogramOfOrientedGradients.CreateHistogramAndWriteThemToFiles("20+", "HistogramsDouble.txt"));
 
-                foreach (var storageFile in leafStorageFiles)
-                {
-                    var image = new Image(await ImageIO.LoadSoftwareBitmapFromFile(storageFile));
-                    var imageHistogram = image
-                        .GaussianFilter()
-                        .ComputeGradient()
-                        .DeleteSquare()
-                        .HistogramOfOrientedGradients(60, 13)
-                        .Normalize();
-                    for (int i = 0; i < imageHistogram.Length; i++)
-                        histogram[i] += imageHistogram[i];
-                }
-
-                for (int i = 0; i < histogram.Length; i++)
-                    histogram[i] /= leafStorageFiles.Count;
-
-                leafTypeMaxPoints += folderName.ToString();
-                foreach (var value in histogram)
-                {
-                    leafTypeMaxPoints += " " + value;
-                }
-                leafTypeMaxPoints += Environment.NewLine;
-            }
-            HistogramOfOrientedGradients.WriteToFile(leafTypeMaxPoints, appFolder, "HistogramsAveragesDouble.txt");
-        }
-
-        private async void WriteHOGToFiles(object sender, RoutedEventArgs e)
-        {
-            var appFolder = await KnownFolders.PicturesLibrary.GetFolderAsync("20+");
-            string leafTypeMaxPoints = Folders.Names.Length + Environment.NewLine;
-            foreach (var folderName in Folders.Names)
-            {
-                var leafTypeFolder = await appFolder.GetFolderAsync(folderName);
-                var leafStorageFiles = await leafTypeFolder.GetFilesAsync(Windows.Storage.Search.CommonFileQuery.OrderByDate);
-
-                foreach (var storageFile in leafStorageFiles)
-                {
-                    var image = new Image(await ImageIO.LoadSoftwareBitmapFromFile(storageFile));
-                    var histogram = image
-                        .GaussianFilter()
-                        .ComputeGradient()
-                        .DeleteSquare()
-                        .HistogramOfOrientedGradients(60, 13)
-                        .Normalize();
-
-                    leafTypeMaxPoints += folderName.ToString();
-                    foreach(var value in histogram)
-                    {
-                        leafTypeMaxPoints += " " + value;
-                    }
-                    leafTypeMaxPoints += Environment.NewLine;
-                }
-            }
-            HistogramOfOrientedGradients.WriteToFile(leafTypeMaxPoints, appFolder, "HistogramsDouble.txt");
-        }
-
-        private async void CreateSubfoldersAndHough(object sender, RoutedEventArgs e)
-        {
-            string leafTypeMaxPoints = string.Empty;
-            var appFolder = await KnownFolders.PicturesLibrary.GetFolderAsync("20+");
-            foreach (var folderName in Folders.Names)
-            {
-                var leafTypeFolder = await appFolder.GetFolderAsync(folderName);
-                var leafStorageFiles = await leafTypeFolder.GetFilesAsync(Windows.Storage.Search.CommonFileQuery.OrderByDate);
-                var gray = await leafTypeFolder.CreateFolderAsync("Grayscale");
-                var filtered = await leafTypeFolder.CreateFolderAsync("GaussianFilter");
-                var Gradient = await leafTypeFolder.CreateFolderAsync("Gradient");
-                var HOG = await leafTypeFolder.CreateFolderAsync("HOG");
-
-                foreach (var storageFile in leafStorageFiles)
-                {
-                    var image = new Image(await ImageIO.LoadSoftwareBitmapFromFile(storageFile));
-                    ImageIO.WriteToFile(gray, "leaf", image.SoftwareBitmap);
-
-                    image.GaussianFilter();
-                    ImageIO.WriteToFile(filtered, "leaf", image.SoftwareBitmap);
-
-                    image.ComputeGradient();
-                    ImageIO.WriteToFile(Gradient, "leaf", image.SoftwareBitmap);
-
-                    image.DrawHistogramOfOrientedGradients(60, 9);
-                    ImageIO.WriteToFile(HOG, "leaf", image.SoftwareBitmap);
-                }
-            }
+            // HistogramOfOrientedGradients.CreateHistogramAveragesAndWriteThemToFile("LeafHogs", "HistogramsAveragesPerClass.txt");
         }
 
         private async void MatchImage(object sender, RoutedEventArgs e)
