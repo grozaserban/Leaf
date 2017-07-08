@@ -17,15 +17,17 @@ namespace Leaf
             _mediaCapture = new MediaCapture();
         }
 
-        public async Task<bool> Initialize()
+        private async Task<bool> Initialize()
         {
             await _mediaCapture.InitializeAsync();
             _lowLagPhotoCapture = await _mediaCapture.PrepareLowLagPhotoCaptureAsync(GetLowestFormat());
             _mediaCapture.VideoDeviceController.Focus.TrySetAuto(true);
             return true;
         }
-
-        public async void StartPreview(MediaCapture source)
+        /***
+         * Source should be set
+         ***/
+        public async void StartPreview()
         {
             if (IsMobile)
                 _mediaCapture.SetPreviewRotation(VideoRotation.Clockwise90Degrees);
@@ -43,7 +45,7 @@ namespace Leaf
             return await _lowLagPhotoCapture.CaptureAsync();
         }
 
-        public static bool IsMobile
+        private static bool IsMobile
         {
             get
             {
@@ -51,7 +53,6 @@ namespace Leaf
                 return (qualifiers.ContainsKey("DeviceFamily") && qualifiers["DeviceFamily"] == "Mobile");
             }
         }
-
 
         private ImageEncodingProperties GetLowestFormat()
         {

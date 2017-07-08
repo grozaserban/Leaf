@@ -45,7 +45,7 @@ namespace Leaf
             _captureManager = await new MediaCaptureWrapperFactory().Create();
 
             capturePreview.Source = _captureManager.MediaCapture;
-            _captureManager.StartPreview(capturePreview.Source);
+            _captureManager.StartPreview();
 
             var picturesLibrary = await StorageLibrary.GetLibraryAsync(KnownLibraryId.Pictures);
             await Task.Run(() =>
@@ -151,7 +151,7 @@ namespace Leaf
                 }
                 leafTypeMaxPoints += Environment.NewLine;
             }
-            WriteToFile(leafTypeMaxPoints, appFolder, "HistogramsAveragesDouble.txt");
+            HistogramOfOrientedGradients.WriteToFile(leafTypeMaxPoints, appFolder, "HistogramsAveragesDouble.txt");
         }
 
         private async void WriteHOGToFiles(object sender, RoutedEventArgs e)
@@ -181,7 +181,7 @@ namespace Leaf
                     leafTypeMaxPoints += Environment.NewLine;
                 }
             }
-            WriteToFile(leafTypeMaxPoints, appFolder, "HistogramsDouble.txt");
+            HistogramOfOrientedGradients.WriteToFile(leafTypeMaxPoints, appFolder, "HistogramsDouble.txt");
         }
 
         private async void CreateSubfoldersAndHough(object sender, RoutedEventArgs e)
@@ -212,20 +212,6 @@ namespace Leaf
                     ImageIO.WriteToFile(HOG, "leaf", image.SoftwareBitmap);
                 }
             }
-        }
-
-        private async void WriteToFile(string leafTypeMaxPoints, StorageFolder folder, string filename)
-        {
-            var file = await folder.CreateFileAsync(filename, CreationCollisionOption.GenerateUniqueName);
-            await Task.Run(() =>
-            {
-                Task.Yield();
-                using (var tw = File.OpenWrite(file.Path))
-                {
-                    byte[] points = new UTF8Encoding(true).GetBytes(leafTypeMaxPoints);
-                    tw.Write(points, 0, points.Length);
-                }
-            });
         }
 
         private async void MatchImage(object sender, RoutedEventArgs e)
