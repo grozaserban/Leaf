@@ -50,7 +50,7 @@
                         VerticalAlignment="Stretch"
                         RenderTransformOrigin="0.5,0.5"
                         Stretch="UniformToFill"
-                        Tapped="Button_Click" />
+                        Tapped="Preview_Tap" />
 
         <Button Grid.Row="0"
                 Grid.Column="3"

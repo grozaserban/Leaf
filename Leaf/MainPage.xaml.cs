@@ -7,13 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
-using Windows.Media.Capture;      //For MediaCapture
-using Windows.Media.MediaProperties;  //For Encoding Image in JPEG format
-using Windows.Storage;         //For storing Capture Image in App storage or in Picture Library
+using Windows.Media.Capture;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using static Leaf.MediaCaptureWrapper;
 using static Net.NeuralNet;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
@@ -25,8 +25,8 @@ namespace Leaf
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private MediaCapture _captureManager;
-        private LowLagPhotoCapture _lowLagPhotoCapture;
+        private MediaCaptureWrapper _captureManager;
+
         private NeuralNet _classifier;
 
         public MainPage()
@@ -42,18 +42,10 @@ namespace Leaf
         /// This parameter is typically used to configure the page.</param>
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            _captureManager = new MediaCapture();
+            _captureManager = await new MediaCaptureWrapperFactory().Create();
 
-            await _captureManager.InitializeAsync();
-
-
-            capturePreview.Source = _captureManager;
-            if (IsMobile)
-                _captureManager.SetPreviewRotation(VideoRotation.Clockwise90Degrees);
-            await _captureManager.StartPreviewAsync();
-
-
-            _lowLagPhotoCapture = await _captureManager.PrepareLowLagPhotoCaptureAsync(GetLowestFormat());
+            capturePreview.Source = _captureManager.MediaCapture;
+            _captureManager.StartPreview(capturePreview.Source);
 
             var picturesLibrary = await StorageLibrary.GetLibraryAsync(KnownLibraryId.Pictures);
             await Task.Run(() =>
@@ -64,30 +56,7 @@ namespace Leaf
 
         protected async override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            await _lowLagPhotoCapture.FinishAsync();
             _captureManager.Dispose();
-        }
-
-        private ImageEncodingProperties GetLowestFormat()
-        {
-            var format = ImageEncodingProperties.CreateUncompressed(MediaPixelFormat.Bgra8);
-
-            var resolutions = _captureManager.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.Photo).ToList();
-            var resolutionObj = resolutions.Last();
-            var resolution = resolutionObj as VideoEncodingProperties;
-
-            format.Height = resolution.Height;
-            format.Width = resolution.Width;
-            return format;
-        }
-        
-        public static bool IsMobile
-        {
-            get
-            {
-                var qualifiers = Windows.ApplicationModel.Resources.Core.ResourceContext.GetForCurrentView().QualifierValues;
-                return (qualifiers.ContainsKey("DeviceFamily") && qualifiers["DeviceFamily"] == "Mobile");
-            }
         }
 
         private async void Open_Photo(object sender, RoutedEventArgs e)
@@ -277,8 +246,7 @@ namespace Leaf
 
         private async void CaptureAndClassify()
         {
-
-            var capturedPhoto = await _lowLagPhotoCapture.CaptureAsync();
+            var capturedPhoto = await _captureManager.GetCapture();
 
             Image image = new Image(capturedPhoto.Frame.SoftwareBitmap);
             await Classify(image);
@@ -289,40 +257,9 @@ namespace Leaf
             CaptureAndClassify();
         }
 
-        private async void Stop_Capture_Preview_Click(object sender, RoutedEventArgs e)
+        private async void Preview_Tap(object sender, RoutedEventArgs e)
         {
-            await _captureManager.StopPreviewAsync();  //stop camera capturing
-        }
-
-        private async void Button_Click(object sender, RoutedEventArgs e)
-        {
-            _captureManager.VideoDeviceController.Focus.TrySetAuto(true);
-            await _captureManager.VideoDeviceController.FocusControl.FocusAsync();
-
-        }
-
-        private async void CaptureAndProcessBitmap(object sender, RoutedEventArgs e)
-        {
-            var lowLagCapture = await _captureManager.PrepareLowLagPhotoCaptureAsync(
-                ImageEncodingProperties.CreateUncompressed(MediaPixelFormat.Bgra8));
-            var capturedPhoto = await lowLagCapture.CaptureAsync();
-            await lowLagCapture.FinishAsync();
-
-            Image image = new Image(capturedPhoto.Frame.SoftwareBitmap);
-
-            // image.ToGrayScale()
-            //      .GaussianFilter()
-            //      .ComputeGradient()
-            //      .DrawHistogramOfOrientedGradients(30, 9);
-
-            
-            await ImageIO.SaveSoftwareBitmapToFile(image.SoftwareBitmap, true);
-
-            var source = new SoftwareBitmapSource();
-            SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            editPreview.Source = source;
-
-
+            _captureManager.Focus();
         }
 
         private async Task<bool> SetSoftwareBitmapSource(SoftwareBitmap bitmap, SoftwareBitmapSource source)
