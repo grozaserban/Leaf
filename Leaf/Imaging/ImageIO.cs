@@ -110,10 +110,8 @@ namespace Leaf
                 return null;
             using (IRandomAccessStream stream = await storageFile.OpenAsync(FileAccessMode.Read))
             {
-                // Create the decoder from the stream
                 BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
 
-                // Get the SoftwareBitmap representation of the file
                 return await decoder.GetSoftwareBitmapAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Straight);
             }
         }

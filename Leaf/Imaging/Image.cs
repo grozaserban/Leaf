@@ -80,6 +80,7 @@ namespace Leaf
         {
             Contract.Requires(softwareBitmap != null);
             SoftwareBitmap = softwareBitmap;
+            _writeableBitmap = new WriteableBitmap(_softwareBitmap.PixelWidth, _softwareBitmap.PixelHeight);
         }
 
         public Image(Image image)
@@ -87,6 +88,7 @@ namespace Leaf
             Contract.Requires(image != null);
             SoftwareBitmap = image.SoftwareBitmap;
             Gradient = image.Gradient;
+            _writeableBitmap = new WriteableBitmap(_softwareBitmap.PixelWidth, _softwareBitmap.PixelHeight);
         }
     }
 }

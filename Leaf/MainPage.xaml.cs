@@ -54,7 +54,7 @@ namespace Leaf
             });
         }
 
-        protected async override void OnNavigatedFrom(NavigationEventArgs e)
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             _captureManager.Dispose();
         }
@@ -142,12 +142,12 @@ namespace Leaf
             await Classify(image);
         }
 
-        private async void Capture_Photo_Click(object sender, RoutedEventArgs e)
+        private void Capture_Photo_Click(object sender, RoutedEventArgs e)
         {
             CaptureAndClassify();
         }
 
-        private async void Preview_Tap(object sender, RoutedEventArgs e)
+        private void Preview_Tap(object sender, RoutedEventArgs e)
         {
             _captureManager.Focus();
         }
@@ -163,7 +163,7 @@ namespace Leaf
             return true;
         }
 
-        private async void ComputeScores(System.Collections.Generic.IReadOnlyList<StorageFile> storageFiles, Image image)
+        private async void ComputeScores(IReadOnlyList<StorageFile> storageFiles, Image image)
         {
             var count = 0;
             var timer = new Stopwatch();
