@@ -25,9 +25,9 @@ namespace Leaf
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private MediaCapture captureManager;
-        private NeuralNet classifier;
-        private int focus = 10;
+        private MediaCapture _captureManager;
+        private LowLagPhotoCapture _lowLagPhotoCapture;
+        private NeuralNet _classifier;
 
         public MainPage()
         {
@@ -42,31 +42,43 @@ namespace Leaf
         /// This parameter is typically used to configure the page.</param>
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            // TODO: Prepare page for display here.
+            _captureManager = new MediaCapture();
 
-            captureManager = new MediaCapture();    //Define MediaCapture object
+            await _captureManager.InitializeAsync();
 
-            await captureManager.InitializeAsync();   //Initialize MediaCapture and
-            capturePreview.Source = captureManager;
-            //Start previewing on CaptureElement
+
+            capturePreview.Source = _captureManager;
             if (IsMobile)
-                captureManager.SetPreviewRotation(VideoRotation.Clockwise90Degrees);
-            await captureManager.StartPreviewAsync();  //Start camera capturing
+                _captureManager.SetPreviewRotation(VideoRotation.Clockwise90Degrees);
+            await _captureManager.StartPreviewAsync();
 
-            if (classifier == null)
+
+            _lowLagPhotoCapture = await _captureManager.PrepareLowLagPhotoCaptureAsync(GetLowestFormat());
+
+            var picturesLibrary = await StorageLibrary.GetLibraryAsync(KnownLibraryId.Pictures);
+            await Task.Run(() =>
             {
-                var picturesLibrary = await StorageLibrary.GetLibraryAsync(KnownLibraryId.Pictures);
-                await Task.Run(() =>
-                {
-                    classifier = NeuralNetFactory.ReadWeightsFromFile(picturesLibrary.SaveFolder.Path + @"\weights.txt", 13, 6);
-                });
-            }
+                _classifier = NeuralNetFactory.ReadWeightsFromFile(picturesLibrary.SaveFolder.Path + @"\weights.txt", 13, 6);
+            });
+        }
 
-            // TODO: If your application contains multiple pages, ensure that you are
-            // handling the hardware Back button by registering for the
-            // Windows.Phone.UI.Input.HardwareButtons.BackPressed event.
-            // If you are using the NavigationHelper provided by some templates,
-            // this event is handled for you.
+        protected async override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            await _lowLagPhotoCapture.FinishAsync();
+            _captureManager.Dispose();
+        }
+
+        private ImageEncodingProperties GetLowestFormat()
+        {
+            var format = ImageEncodingProperties.CreateUncompressed(MediaPixelFormat.Bgra8);
+
+            var resolutions = _captureManager.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.Photo).ToList();
+            var resolutionObj = resolutions.Last();
+            var resolution = resolutionObj as VideoEncodingProperties;
+
+            format.Height = resolution.Height;
+            format.Width = resolution.Width;
+            return format;
         }
         
         public static bool IsMobile
@@ -83,62 +95,50 @@ namespace Leaf
             Image image = new Image(await ImageIO.LoadSoftwareBitmapFromFile());
             var bitmapSource = new SoftwareBitmapSource();
             editPreview.Source = bitmapSource;
-            //Task.Run(() => ProcessPhotoWithDelay(image, bitmapSource));
-            ProcessPhotoWithDelay(image, bitmapSource);
+            await ComputeHistogramWithDisplay(image, bitmapSource, TimeSpan.FromMilliseconds(1000));
         }
 
-        private async void ProcessPhotoWithDelay(Image image, SoftwareBitmapSource source)
+        private async Task<List<double>> ComputeHistogramWithDisplay(Image image, SoftwareBitmapSource source, TimeSpan timeSpan)
         {
-            var timeSpan = TimeSpan.FromMilliseconds(1000);
             await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
             await Task.Delay(timeSpan);
 
             image.GaussianFilter();
             await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-     //       await Task.Delay(timeSpan);
+            await Task.Delay(timeSpan);
 
             image.ComputeGradient();
             await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-//await Task.Delay(timeSpan);
+            await Task.Delay(timeSpan);
 
             image.DeleteSquare();
             await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-   //         await Task.Delay(timeSpan);
+            await Task.Delay(timeSpan);
 
-            var hist = image.HistogramOfOrientedGradients(60, 14);
+            var hist = image.HistogramOfOrientedGradients(60, 13);
+            image.DrawHistogramOfOrientedGradients(60, 9);
             await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            //await Task.Delay(timeSpan);
+            await Task.Delay(timeSpan);
 
-            await ImageIO.SaveSoftwareBitmapToFile(image.SoftwareBitmap);
+            return hist.Normalize().ToList();
+          //  await ImageIO.SaveSoftwareBitmapToFile(image.SoftwareBitmap);
         }
 
-        private async void Classify(Image image)
+        private async Task<bool> Classify(Image image)
         {
+            var bitmapSource = new SoftwareBitmapSource();
+            editPreview.Source = bitmapSource;
+            var histogram = await ComputeHistogramWithDisplay(image, bitmapSource, TimeSpan.FromMilliseconds(500));
 
-            image.GaussianFilter();
-            image.ComputeGradient();
-            image.DeleteSquare();
-          
-            var histogram =  image.HistogramOfOrientedGradients(60, 13).Normalize().ToList();
             var emptyOutputs = new List<double>() { 0, 0, 0, 0, 0, 0 };
-            classifier.ChangeData(histogram, emptyOutputs);
-            var classification = classifier.GetClassification();
-
-
-                //UI code here
-                ClassTextBlock.Text = Folders.PlantNames[classification.Item1] + " Class";
-                ConfidenceTextBlock.Text = classification.Item2 + "% Confidence";
-
+            _classifier.ChangeData(histogram, emptyOutputs);
+            var classification = _classifier.GetClassification();
+            
+            ClassTextBlock.Text = Folders.PlantNames[classification.Item1] + " Class";
+            ConfidenceTextBlock.Text = classification.Item2 + "% Confidence";
+            return true;
         }
 
-        private async void CreateHough(Image image)
-        {
-            for (int i = 1; i < 10; i ++)
-                for (int j = 1; j < 10; j++)
-                {
-                    ImageIO.SaveSoftwareBitmapToFile(image.HoughGradient(i, j).SoftwareBitmap);
-                }
-        }
 
         private async void LoadImages(object sender, RoutedEventArgs e)
         {
@@ -277,72 +277,33 @@ namespace Leaf
 
         private async void CaptureAndClassify()
         {
-            var format = ImageEncodingProperties.CreateUncompressed(MediaPixelFormat.Bgra8);
 
-            var resolutions = captureManager.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.Photo).ToList();
-            var resolutionObj = resolutions.Last();
-            var resolution = resolutionObj as VideoEncodingProperties;
-
-            format.Height = resolution.Height;
-            format.Width = resolution.Width;
-
-
-            var lowLagCapture = await captureManager.PrepareLowLagPhotoCaptureAsync(format);
-            var capturedPhoto = await lowLagCapture.CaptureAsync();
+            var capturedPhoto = await _lowLagPhotoCapture.CaptureAsync();
 
             Image image = new Image(capturedPhoto.Frame.SoftwareBitmap);
-            Classify(image);
-            lowLagCapture.FinishAsync();
+            await Classify(image);
         }
 
         private async void Capture_Photo_Click(object sender, RoutedEventArgs e)
         {
             CaptureAndClassify();
-
-            ////Create JPEG image Encoding format for storing image in JPEG type
-            //ImageEncodingProperties imgFormat = ImageEncodingProperties.CreateBmp();
-
-            //var rotation = captureManager.GetPreviewRotation();
-            //var resolutions = captureManager.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.Photo).ToList();
-            //var resolutionObj = resolutions.Last();
-            //var resolution = resolutionObj as VideoEncodingProperties;
-
-            //imgFormat.Height = resolution.Height;
-            //imgFormat.Width = resolution.Width;
-            ////  captureManager.VideoDeviceController.SetMediaStreamPropertiesAsync(MediaStreamType.Photo, imgFormat);
-            //try
-            //{
-            //    captureManager.VideoDeviceController.FlashControl.Enabled = false;
-
-            //}
-            //catch
-            //{
-            //}
-            ////captureManager.VideoDeviceController.Focus.TrySetValue(0.5);
-
-            //// create storage file in local app storage
-            //var documentsLibrary = KnownFolders.PicturesLibrary.Path.ToString();
-            //// StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("Photo.jpg", CreationCollisionOption.ReplaceExisting);
-            //var file = await KnownFolders.PicturesLibrary.CreateFileAsync("leaf.bmp", CreationCollisionOption.GenerateUniqueName);
-            //// take photo and store it on file location.
-            //captureManager.CapturePhotoToStorageFileAsync(imgFormat, file);
         }
 
         private async void Stop_Capture_Preview_Click(object sender, RoutedEventArgs e)
         {
-            await captureManager.StopPreviewAsync();  //stop camera capturing
+            await _captureManager.StopPreviewAsync();  //stop camera capturing
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            captureManager.VideoDeviceController.Focus.TrySetAuto(true);
-            captureManager.VideoDeviceController.FocusControl.FocusAsync();
+            _captureManager.VideoDeviceController.Focus.TrySetAuto(true);
+            await _captureManager.VideoDeviceController.FocusControl.FocusAsync();
 
         }
 
         private async void CaptureAndProcessBitmap(object sender, RoutedEventArgs e)
         {
-            var lowLagCapture = await captureManager.PrepareLowLagPhotoCaptureAsync(
+            var lowLagCapture = await _captureManager.PrepareLowLagPhotoCaptureAsync(
                 ImageEncodingProperties.CreateUncompressed(MediaPixelFormat.Bgra8));
             var capturedPhoto = await lowLagCapture.CaptureAsync();
             await lowLagCapture.FinishAsync();

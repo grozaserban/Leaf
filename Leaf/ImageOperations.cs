@@ -630,6 +630,7 @@ namespace Leaf
         {
             Contract.Assert(image != null);
             Contract.Assert(image.Gradient != null, "gradient is not computed");
+            Contract.Assert(bucketCount <= 9, "Cannot draw gradient for more than 9 buckets");
 
             ColorPixel[] colorPixel = HOGPixels.getHogPixels();
 
@@ -684,7 +685,7 @@ namespace Leaf
                     binx = x / sizex;
                     biny = y / sizey;
                     var pixel = colorPixel[gradHist[binx, biny, bucketCount]];
-                    image.GrayScale.SetPixel(x, y, (byte)((pixel.R+ pixel.G+ pixel.B)/3));
+                    image.GrayScale.SetPixel(x, y, (byte)((pixel.R + pixel.G + pixel.B) / 3));
                 }
             }
 
