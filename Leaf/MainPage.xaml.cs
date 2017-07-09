@@ -84,8 +84,8 @@ namespace Leaf
             await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
             await Task.Delay(timeSpan);
 
-            var hist = image.HistogramOfOrientedGradients(60, 13);
-            image.DrawHistogramOfOrientedGradients(60, 9);
+            var hist = image.HistogramOfOrientedGradients(240, 13);
+            image.DrawHistogramOfOrientedGradients(240, 9);
             await SetSoftwareBitmapSource(image.SoftwareBitmap, source);
             await Task.Delay(timeSpan);
 

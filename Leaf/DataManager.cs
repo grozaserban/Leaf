@@ -38,7 +38,7 @@ namespace Leaf
                         .GaussianFilter()
                         .ComputeGradient()
                         .DeleteSquare()
-                        .HistogramOfOrientedGradients(60, 13)
+                        .HistogramOfOrientedGradients(240, 13)
                         .Normalize();
 
                     leafTypeMaxPoints += folderName.ToString();
@@ -69,7 +69,7 @@ namespace Leaf
                         .GaussianFilter()
                         .ComputeGradient()
                         .DeleteSquare()
-                        .HistogramOfOrientedGradients(60, 13)
+                        .HistogramOfOrientedGradients(240, 13)
                         .Normalize();
                     for (int i = 0; i < imageHistogram.Length; i++)
                         histogram[i] += imageHistogram[i];
@@ -112,7 +112,7 @@ namespace Leaf
                     image.ComputeGradient();
                     ImageIO.WriteToFile(Gradient, "leaf", image.SoftwareBitmap);
 
-                    image.DrawHistogramOfOrientedGradients(60, 9);
+                    image.DrawHistogramOfOrientedGradients(240, 9);
                     ImageIO.WriteToFile(HOG, "leaf", image.SoftwareBitmap);
                 }
             }
