@@ -614,14 +614,18 @@ namespace Leaf
         public static double[] Normalize(this int[] array)
         {
             var max = 0;
+            var min = int.MaxValue;
             double[] normalizedValues = new double[array.Length];
             foreach (var value in array)
             {
                 if (value > max)
                     max = value;
+                if (value < min)
+                    min = value;
             }
+            max -= min;
             for (int i = 0; i < array.Length; i++)
-                normalizedValues[i] = (double)array[i] / max;
+                normalizedValues[i] = (double)(array[i] - min) / max;
 
             return normalizedValues;
         }
