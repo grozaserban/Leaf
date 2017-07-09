@@ -695,51 +695,5 @@ namespace Leaf
 
             return image;
         }
-
-        //public static long MatchExactely(this Image first, Image second)
-        //{
-        //    if (AreNotTheSameSize(first.Editor, second.Editor))
-        //        return 0;
-
-        //    long score = 0;
-
-        //    var equalityComparer = new PixelEqualityComparer();
-
-        //    for (int y = 0; y < first.PixelHeight; y++)
-        //    {
-        //        for (int x = 0; x < first.PixelWidth; x++)
-        //        {
-        //            SoftwareBitmapPixel pixel = first.Editor.GetPixel(x, y);
-        //            SoftwareBitmapPixel secondpixel = second.Editor.GetPixel(x, y);
-        //            if (equalityComparer.Equals(pixel, secondpixel))
-        //                score += 1;
-        //        }
-        //    }
-        //    return score;
-        //}
-
-        //public static long Match(this Image first, Image second)
-        //{
-        //    if (AreNotTheSameSize(first.Editor, second.Editor))
-        //        return 0;
-
-        //    long score = 0;
-
-        //    for (int y = 0; y < first.PixelHeight; y++)
-        //    {
-        //        for (int x = 0; x < first.PixelWidth; x++)
-        //        {
-        //            SoftwareBitmapPixel pixel = first.Editor.GetPixel(x, y);
-        //            SoftwareBitmapPixel secondpixel = second.Editor.GetPixel(x, y);
-        //            score += HOGPixels.comparePixels(pixel, secondpixel);
-        //        }
-        //    }
-        //    return score / HOGPixels.MaxScore;
-        //}
-
-        //private static bool AreNotTheSameSize(SoftwareBitmapEditor first, SoftwareBitmapEditor second)
-        //{
-        //    return ((first.height != second.height) || (first.width != second.width));
-        //}
     }
 }

@@ -118,22 +118,6 @@ namespace Leaf
             // HistogramOfOrientedGradients.CreateHistogramAveragesAndWriteThemToFile("LeafHogs", "HistogramsAveragesPerClass.txt");
         }
 
-        private async void MatchImage(object sender, RoutedEventArgs e)
-        {
-            var storageFolder = await KnownFolders.PicturesLibrary.GetFolderAsync("HOG60");
-            var storageFiles = await storageFolder.GetFilesAsync(Windows.Storage.Search.CommonFileQuery.OrderByDate);
-
-            var image = new Image(await ImageIO.LoadSoftwareBitmapFromFile()); 
-            image.GaussianFilter();
-            image.ComputeGradient();
-            image.DrawHistogramOfOrientedGradients(20, 9);
-            ComputeScores(storageFiles, image);
- 
-            var source = new SoftwareBitmapSource();
-            SetSoftwareBitmapSource(image.SoftwareBitmap, source);
-            editPreview.Source = source;
-        }
-
         private async void CaptureAndClassify()
         {
             var capturedPhoto = await _captureManager.GetCapture();
@@ -161,36 +145,6 @@ namespace Leaf
 
             await source.SetBitmapAsync(bitmap);
             return true;
-        }
-
-        private async void ComputeScores(IReadOnlyList<StorageFile> storageFiles, Image image)
-        {
-            var count = 0;
-            var timer = new Stopwatch();
-    /*        timer.Start();
-            foreach (var storageFile in storageFiles)
-            {
-                var imageFromStorage = new Image(await ImageIO.LoadSoftwareBitmapFromFile(storageFile));
-                long score = image.MatchExactely(imageFromStorage);
-                score -= 210 * 480; // because 210 lines are red and they will match
-                long percent = score / (48 * 48) * 480 / 270; // because only 270 lines are usefull
-                Debug.WriteLine(count + " Score: " + score + " Percent: " + percent);
-                count++;
-            }
-            timer.Stop();
-            Debug.WriteLine("Duration sequential: %d", timer.ElapsedMilliseconds); */
-
-            timer.Reset();
-            Parallel.ForEach(storageFiles, async storageFile => {
-
-                var imageFromStorage = new Image(await ImageIO.LoadSoftwareBitmapFromFile(storageFile));
-                long score = 2;// image.MatchExactely(imageFromStorage);
-                score -= 210 * 480; // because 210 lines are red and they will match
-                long percent = score / (48 * 48) * 480 / 270; // because only 270 lines are usefull
-                Debug.WriteLine(" Score: " + score + " Percent: " + percent);
-            });
-            timer.Stop();
-            Debug.WriteLine("Duration parallel: %d", timer.ElapsedMilliseconds);
         }
     }
 }
