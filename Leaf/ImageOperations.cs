@@ -641,10 +641,10 @@ namespace Leaf
             int angle;
             int sizex, sizey, binx, biny;
 
-            sizex = (int)(image.PixelWidth / histogramSizeX + 1);
-            sizey = (int)(image.PixelHeight / histogramSizeY + 1);
+            sizex = (image.PixelWidth / histogramSizeX + 1);
+            sizey = (image.PixelHeight / histogramSizeY + 1);
 
-            for (int i = 0; i < (int)histogramSizeX; i++)
+            for (int i = 0; i < histogramSizeX; i++)
                 for (int j = 0; j < (int)histogramSizeY; j++)
                     for (int k = 0; k < 9; k++)
                     {
@@ -685,7 +685,7 @@ namespace Leaf
                     binx = x / sizex;
                     biny = y / sizey;
                     var pixel = colorPixel[gradHist[binx, biny, bucketCount]];
-                    image.GrayScale.SetPixel(x, y, (byte)((pixel.R + pixel.G + pixel.B) / 3));
+                    image.GrayScale.SetPixel(x, y, (byte)((pixel.R + pixel.G + pixel.B) / 3)); // coud replace with bucket index times 360/bucketCount
                 }
             }
 
