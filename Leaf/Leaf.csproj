@@ -105,14 +105,12 @@
     <Compile Include="Imaging\GrayScaleImage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SortedPixelList.cs" />
+    <Compile Include="Tests.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="ClassDiagram.cd" />
-    <None Include="ClassDiagram1.cd" />
-    <None Include="ClassDiagram2.cd" />
     <None Include="Leaf_TemporaryKey.pfx" />
     <None Include="project.json" />
   </ItemGroup>
