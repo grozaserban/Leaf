@@ -45,12 +45,12 @@ namespace Leaf
             _captureManager = await new MediaCaptureWrapperFactory().Create();
 
             capturePreview.Source = _captureManager.MediaCapture;
-            _captureManager.StartPreview();
+        //    _captureManager.StartPreview();
 
             var picturesLibrary = await StorageLibrary.GetLibraryAsync(KnownLibraryId.Pictures);
             await Task.Run(() =>
             {
-                _classifier = NeuralNetFactory.ReadWeightsFromFile(picturesLibrary.SaveFolder.Path + @"\weights.txt", 13, 6);
+                _classifier = NeuralNetFactory.CreateNetWithPredefinedWeights(picturesLibrary.SaveFolder.Path + @"\weights.txt", 13, 6);
             });
         }
 
@@ -111,11 +111,14 @@ namespace Leaf
 
         private async void LoadImages(object sender, RoutedEventArgs e)
         {
-             await Task.Run(() => DataManager.CreateSubfoldersAndHough("20+"));
+            //   await Task.Run(() => DataManager.CreateSubfoldersAndHough("20+"));
+         //   await Task.Run(() => Reading.SplitDataInFiles(@"C:\Users\Serban\Pictures\20+\HistogramsOnPixelsDouble.txt",
+         //       @"C:\Users\Serban\Pictures\20+\MinNormalizedTestData\", 5));
 
-          //    HistogramOfOrientedGradients.CreateHistogramAndWriteThemToFiles("20+", "HistogramsDouble.txt"));
+        await Task.Run(() => new Tests().TestHogOnAllNewDataWithPerformanceAndConfidence(@"C:\Users\Serban\Pictures\20+\MinNormalizedTestData"));
 
-            // HistogramOfOrientedGradients.CreateHistogramAveragesAndWriteThemToFile("LeafHogs", "HistogramsAveragesPerClass.txt");
+        //         DataManager.CreateHistogramAndWriteThemToFiles("20+", "HistogramsOnPixelsDouble.txt");
+         
         }
 
         private async void CaptureAndClassify()
