@@ -1,18 +1,14 @@
 ﻿using Net;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static Net.NeuralNet;
 
 namespace Leaf
 {
     public class Tests
     {
-        public void TestHogOnAllNewDataWithPerformanceAndConfidence()
+        public void TestHogOnAllNewDataWithPerformanceAndConfidence(string dataPath)
         {
-            var dataPath = @"C:\Users\Serban\Pictures\20+\testData";
             var folds = 5;
 
             for (int i = 0; i < folds; i++)
@@ -24,10 +20,20 @@ namespace Leaf
 
                 Link.RenewalFactor = 0.000003; // maybe decrease
                 Link.Step = 0.05;
-                var sut = NeuralNetFactory.Create(2, 10, data.InputValues[0], data.ExpectedResults[0]);
+                var sut = NeuralNetFactory.Create(2,
+                    10,
+                    data.InputValues[0].Count,
+                    data.ExpectedResults[0].Count);
 
-                var iterations = sut.TrainAdaptiveWithConfidenceAndPerformance(data.InputValues, data.ExpectedResults, -0.00005, 500000, testData, i);
+                var iterations = sut.TrainAdaptiveWithConfidenceAndPerformance(data.InputValues, data.ExpectedResults, -0.00005, 150000, testData, i, dataPath);
             }
+        }
+
+        public static void SplitHistogramsInSeparateFiles(string sourcePath, string destinationFolderPath)
+        {
+            var data = new Reading(sourcePath);
+
+            data.CreateTestData(destinationFolderPath);
         }
     }
 }
